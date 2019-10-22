@@ -1,70 +1,87 @@
 {
-  "general":{
-    "currentGeneratedNum":1
-  },
   "permanentRecords":{
+    "br_ghost":{
+      "flags":0,
+      "effects":[{
+          "attribute":-1,
+          "area":0,
+          "id":10,
+          "rangeType":0,
+          "skill":-1,
+          "magnitudeMin":400,
+          "magnitudeMax":400
+        },{
+          "attribute":-1,
+          "area":0,
+          "id":40,
+          "rangeType":0,
+          "skill":-1,
+          "magnitudeMin":100,
+          "magnitudeMax":100
+        }],
+      "name":"Ghost",
+      "subtype":4,
+      "cost":0
+    },
     "slowfall_power":{
+      "flags":0,
+      "effects":[{
+          "attribute":-1,
+          "area":0,
+          "id":11,
+          "rangeType":0,
+          "skill":-1,
+          "magnitudeMin":5,
+          "magnitudeMax":5
+        }],
       "name":"Slowfall",
       "subtype":4,
-      "cost":0,
-      "flags":0,
-      "effects":[{
-          "id":11,
-          "attribute":-1,
-          "skill":-1,
-          "rangeType":0,
-          "area":0,
-          "magnitudeMax":5,
-          "magnitudeMin":5
-        }]
+      "cost":0
     },
     "fogdamage1":{
-      "name":"Fog damage",
-      "subtype":4,
-      "cost":0,
       "flags":0,
       "effects":[{
-          "id":23,
           "attribute":-1,
-          "skill":-1,
-          "rangeType":0,
           "area":0,
-          "magnitudeMax":1,
-          "magnitudeMin":1
-        }]
+          "id":23,
+          "rangeType":0,
+          "skill":-1,
+          "magnitudeMin":1,
+          "magnitudeMax":1
+        }],
+      "name":"Fog damage",
+      "subtype":4,
+      "cost":0
     },
     "fogdamage2":{
-      "name":"Fog damage",
-      "subtype":4,
-      "cost":0,
       "flags":0,
       "effects":[{
-          "id":23,
           "attribute":-1,
-          "skill":-1,
-          "rangeType":0,
           "area":0,
-          "magnitudeMax":5,
-          "magnitudeMin":5
-        }]
+          "id":23,
+          "rangeType":0,
+          "skill":-1,
+          "magnitudeMin":5,
+          "magnitudeMax":5
+        }],
+      "name":"Fog damage",
+      "subtype":4,
+      "cost":0
     },
     "fogdamage3":{
-      "name":"Fog damage",
-      "subtype":4,
-      "cost":0,
       "flags":0,
       "effects":[{
-          "id":23,
           "attribute":-1,
-          "skill":-1,
-          "rangeType":0,
           "area":0,
-          "magnitudeMax":15,
-          "magnitudeMin":15
-        }]
+          "id":23,
+          "rangeType":0,
+          "skill":-1,
+          "magnitudeMin":15,
+          "magnitudeMax":15
+        }],
+      "name":"Fog damage",
+      "subtype":4,
+      "cost":0
     }
-  },
-  "generatedRecords":[],
-  "recordLinks":[],
-  "unlinkedRecordsToCheck":[]
+  }
 }

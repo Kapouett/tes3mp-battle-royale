@@ -1,0 +1,33 @@
+{
+  "general":{
+    "currentGeneratedNum":0
+  },
+  "permanentRecords":{
+    "br_lootbox":{
+      "name":"Common Fargoth",
+      "gender":1,
+      "race":"wood elf",
+      "hair":"b_n_wood elf_m_hair_03",
+      "head":"b_n_wood elf_m_head_02",
+      "class":"thief",
+      "autoCalc":0,
+      "health":0,
+      "birthsign":"hara",
+      "items":[{
+          "id":"common_shoes_04",
+          "count":1
+        },{
+          "id":"common_pants_04",
+          "count":1
+        },{
+          "id":"common_shirt_04",
+          "count":1
+        }],
+      "level":1
+    }
+  },
+  "generatedRecords":{},
+  "recordLinks":{},
+  "unlinkedRecordsToCheck":[]
+}
+

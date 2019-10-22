@@ -6,6 +6,19 @@ Battle Royale game mode for TES3MP 0.7.0-alpha.
 
 This is far from finished, so I won't write anything useful here for now.
 
-testBR.lua is the file with all the code, and some custom spells and map tiles whicch are neede for code to work are also provided.
+scripts/custom/testBR.lua is the file with most of the code.
+scripts/custom/testBRLootManager.lua manages loot tables and loot spawning logic.
+data contains images to draw fog on the map and custom records needed for the script to work.
 
-And some changes have to be made in config.lua, for example chhanging the default respawn point.
+## Usage
+Drop the script and data folders in your server folder and add `require("custom/testBR")` to scripts/customScripts.lua.
+
+## Recommended changes to config.lua
+- allowWildernessRest = false
+- config.allowWait = false
+- shareMapExploration = false
+- respawnAtImperialShrine = false
+- respawnAtTribunalTemple = false
+- playersRespawn = true
+- bountyResetOnDeath = true
+- bountyDeathPenalty = false
