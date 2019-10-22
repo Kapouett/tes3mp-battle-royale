@@ -6,12 +6,13 @@ Battle Royale game mode for TES3MP 0.7.0-alpha.
 
 This is far from finished, so I won't write anything useful here for now.
 
-scripts/custom/testBR.lua is the file with most of the code.
-scripts/custom/testBRLootManager.lua manages loot tables and loot spawning logic.
-data contains images to draw fog on the map and custom records needed for the script to work.
+-scripts/custom/testBR.lua is the file with most of the code.
+-scripts/custom/testBRLootManager.lua manages loot tables and loot spawning logic.
+-data contains images to draw fog on the map and custom records needed for the script to work.
 
-## Usage
+## Installation
 Drop the script and data folders in your server folder and add `require("custom/testBR")` to scripts/customScripts.lua.
+Adjust configuration in both scripts files (testBR.lua and testBRLootManager.lua), **espacially the lobby cell** because I use the french version of the game, so I set the lobby as "Vivec, fosse de l'Arène".
 
 ## Recommended changes to config.lua
 - allowWildernessRest = false
@@ -22,3 +23,14 @@ Drop the script and data folders in your server folder and add `require("custom/
 - playersRespawn = true
 - bountyResetOnDeath = true
 - bountyDeathPenalty = false
+
+## Usage
+Players can propose a match with `/newmatch`
+
+Players can join a match proposition with `/join`. This will put them in the lobby
+
+The match will start when every player in the lobby used `/ready`
+
+Admins can force a match to start with `/forcestartmatch` or end with `/forceend`
+
+Admins can force the fog to progress instantly with `/forcenextfog`
