@@ -1,5 +1,9 @@
+-- ====================== CONFIG ======================
+
 -- Npc used as loot containers
 corpseRefId = "br_lootbox"
+
+-- ====================================================
 
 
 fileHelper = require("fileHelper")
