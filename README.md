@@ -6,10 +6,10 @@ Battle Royale game mode for TES3MP 0.7.0-alpha.
 
 This is far from finished, so I won't write anything useful here for now.
 
--`scripts/custom/testBR.lua` is the file with most of the code.
--`scripts/custom/testBRLootManager`.lua manages loot tables and loot spawning logic.
--`scripts/custom/testBRConfig.lua` contains settings for the Battle Royale scripts.
--`data` contains images to draw fog on the map and custom records needed for the script to work, as well as a sample loot table.
+- `scripts/custom/testBR.lua` is the file with most of the code.
+- `scripts/custom/testBRLootManager`.lua manages loot tables and loot spawning logic.
+- `scripts/custom/testBRConfig.lua` contains settings for the Battle Royale scripts.
+- `data` contains images to draw fog on the map and custom records needed for the script to work, as well as a sample loot table.
 
 ## Installation
 Drop the script and data folders in your server folder and add `require("custom/testBR")` to scripts/customScripts.lua.
@@ -42,12 +42,11 @@ Adjust configuration in `scripts/custom/testBRConfig.lua`, **espacially the lobb
 - bountyDeathPenalty = false
 
 ## Usage
-Players can propose a match with `/newmatch`
-
-Players can join a match proposition with `/join`. This will put them in the lobby
-
-The match will start when every player in the lobby used `/ready`
-
-Admins can force a match to start with `/forcestartmatch` or end with `/forceend`
-
-Admins can force the fog to progress instantly with `/forcenextfog`
+### Users
+- `/newmatch` to propose a new match
+- `/join` to join a match proposition. This will put them in the lobby
+- `/ready` when you are in a lobby (the match will start when everyone is ready)
+### Admins
+- `/forcestartmatch` to force the current proposition to start
+- `/forceend` terminates the current match
+- `/forcenextfog` makes the fog to progress instantly
