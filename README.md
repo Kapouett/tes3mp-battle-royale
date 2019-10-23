@@ -6,13 +6,30 @@ Battle Royale game mode for TES3MP 0.7.0-alpha.
 
 This is far from finished, so I won't write anything useful here for now.
 
--scripts/custom/testBR.lua is the file with most of the code.
--scripts/custom/testBRLootManager.lua manages loot tables and loot spawning logic.
--data contains images to draw fog on the map and custom records needed for the script to work.
+-`scripts/custom/testBR.lua` is the file with most of the code.
+-`scripts/custom/testBRLootManager`.lua manages loot tables and loot spawning logic.
+-`scripts/custom/testBRConfig.lua` contains settings for the Battle Royale scripts.
+-`data` contains images to draw fog on the map and custom records needed for the script to work, as well as a sample loot table.
 
 ## Installation
 Drop the script and data folders in your server folder and add `require("custom/testBR")` to scripts/customScripts.lua.
-Adjust configuration in both scripts files (testBR.lua and testBRLootManager.lua), **espacially the lobby cell** because I use the french version of the game, so I set the lobby as "Vivec, fosse de l'Arène".
+
+Edit the `scripts/player/base.lua` file to replace `BasePlayer:Resurrect()` with
+```
+function BasePlayer:Resurrect() -- Modified respawning behavior for Battle Royale
+	-- Ensure that dying as a werewolf turns you back into your normal form
+    if self.data.shapeshift.isWerewolf == true then
+        self:SetWerewolfState(false)
+    end
+
+    -- Ensure that we unequip deadly items when applicable, to prevent an
+    -- infinite death loop
+    contentFixer.UnequipDeadlyItems(self.pid)
+
+	tes3mp.Resurrect(self.pid, enumerations.resurrect.REGULAR)
+end
+```
+Adjust configuration in `scripts/custom/testBRConfig.lua`, **espacially the lobby cell** because I use the french version of the game, so I set the lobby as "Vivec, fosse de l'Arène".
 
 ## Recommended changes to config.lua
 - allowWildernessRest = false

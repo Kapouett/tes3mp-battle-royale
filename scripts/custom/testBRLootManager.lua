@@ -1,10 +1,5 @@
--- ====================== CONFIG ======================
-
--- Npc used as loot containers
-corpseRefId = "br_lootbox"
-
--- ====================================================
-
+-- Config file
+brConfig = require("custom/testBRConfig")
 
 fileHelper = require("fileHelper")
 tableHelper = require("tableHelper")
