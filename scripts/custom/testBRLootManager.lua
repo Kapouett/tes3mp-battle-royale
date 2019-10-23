@@ -12,21 +12,17 @@ math.randomseed(os.time())
 
 testBRLootManager = {}
 
-defaultData = 
-    {
-        tables = {  },
-        locations = {  }
-    }
+local defaultData = { tables = {  }, locations = {  } }
 
 -- Initialize current data to valid default values
-data = {}
+local data = {}
 
 -- Sums of probabilities for each table
-sums = {}
+local sums = {}
 
-lootFile = ""
+local lootFile = ""
 
-hasEntry = false
+local hasEntry = false
 
 testBRLootManager.init = function(fileName)
 	lootFile = fileName .. ".json"
@@ -195,7 +191,6 @@ testBRLootManager.SpawnLootBox = function(cell, x, y, z, loot)
 
 	local objectData = {}
 	objectData.refId = refId
-	objectData.goldValue = 2500
 	objectData.location = location
 	
 	packetBuilder.AddObjectPlace(uniqueId, objectData)
@@ -206,7 +201,7 @@ testBRLootManager.SpawnLootBox = function(cell, x, y, z, loot)
 	for itemRefId, itemData in pairs(loot) do
 		if item ~= nil then
 			command = "additem \"" .. itemRefId .. "\" " .. tostring(itemData.count) --TODO: test this
-			logicHandler.RunConsoleCommandOnObject(0, command, LoadedCells[cell], uniqueId, true) -- , true) --TODO test if the last argument is needed
+			logicHandler.RunConsoleCommandOnObject(0, command, LoadedCells[cell], uniqueId, true)
 		end
 	end
 end

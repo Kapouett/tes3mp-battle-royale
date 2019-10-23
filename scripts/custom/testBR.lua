@@ -1,27 +1,8 @@
 
--- Battle Royale game mode by testman, continued by Kapouett
+-- Battle Royale game mode by testman, modified by Kapouett
 -- v0.3
 
---[[
-Add the permanentRecords in data/recordstores/spell.json
-
-Add fog1.png, fog2.png, fog3.png and fogwarn.png in data/map
-
-To make respawning work, replace BasePlayer:Resurrect() in scripts/player/base.lua with:
-function BasePlayer:Resurrect() -- Modified respawning behavior for Battle Royale
-	-- Ensure that dying as a werewolf turns you back into your normal form
-    if self.data.shapeshift.isWerewolf == true then
-        self:SetWerewolfState(false)
-    end
-
-    -- Ensure that we unequip deadly items when applicable, to prevent an
-    -- infinite death loop
-    contentFixer.UnequipDeadlyItems(self.pid)
-
-	tes3mp.Resurrect(self.pid, enumerations.resurrect.REGULAR)
-end
-
---]]
+-- Don't forget to read the README.MD!
 
 -- TODO:
 -- find a decent name for overall project
@@ -94,7 +75,9 @@ fogLevel - one set of cells. It is used to easily determine if cell that player 
 
 fogStage - basically index of fog progress
 
+
 ---- Kapouett's stuff ----
+
 Players are in spectator mode (state 0) and can start a match proposal.
 Players can join a proposed match (switching to state 1), moving them to the lobby.
 Players can mark themselves as ready (switching to state 2). When everyone in the lobby is ready, the match begins (switching participants to state 3)
@@ -117,28 +100,28 @@ testBR = {}
 -- ====================== GLOBAL VARIABLES ======================
 
 -- unique identifier for the match
-matchId = 0
+local matchId = 0
 
 -- indicates if there is currently an active match going on
-roundInProgress = false
+local roundInProgress = false
 
 -- indicates if match proposal is currently in progress
-matchProposalInProgress = false
+local matchProposalInProgress = false
 
 -- keep track of which players are in a match
-playerList = {}
+local playerList = {}
 
 -- cells visited during this match, used for loot spawning
-visitedCells = {}
+local visitedCells = {}
 
 -- used to track the fog progress
-currentFogStage = 1
+local currentFogStage = 1
 
 -- used to store ony bottom left and top right corner of each level
-fogGridLimits = {}
+local fogGridLimits = {}
 
 -- for warnings about time remaining until fog shrinks
-fogShrinkRemainingTime = 0
+local fogShrinkRemainingTime = 0
 
 -- ====================== FUN STARTS HERE ======================
 
@@ -266,7 +249,7 @@ testBR.PlayerInit = function(pid)
 
 		testBR.StartAirdrop(pid)
 		
-		table.insert(playerList, pid)
+		playerList[pid] = true
 
 		tes3mp.MessageBox(pid, -1, "Begin match!")
 
@@ -900,10 +883,12 @@ testBR.ProcessDeath = function(pid)
 		end
 
 		testBR.DropAllItems(pid)
-		table.remove(playerList, pid)
-		testBR.CheckVictoryConditions()
 
 		testBR.SetPlayerState(pid, 0)
+
+		playerList[pid] = nil
+
+		testBR.CheckVictoryConditions()
 	end
 	testBR.SetFogDamageLevel(pid, 0)
 	Players[pid]:Save()
@@ -998,21 +983,6 @@ testBR.EndCharGen = function(pid)
 	testBR.VerifyPlayerData(pid)
 
 	testBR.SetPlayerState(pid, 0)
-end
-
--- check if player is last one
-testBR.CheckVictoryConditions = function()
-	if roundInProgress then
-		if testBR.TableLen(playerList) == 0 then
-			tes3mp.SendMessage(0, color.Green .. "Everyone died!\n", true)
-			testBR.EndMatch()
-		elseif testBR.TableLen(playerList) == 1 then
-			tes3mp.SendMessage(0, color.Green .. Players[playerList[1]].data.login.name .. " won the match!\n", true)
-			Players[playerList[1]].data.BRinfo.wins = Players[playerList[1]].data.BRinfo.wins + 1
-			Players[playerList[1]]:Save()
-			testBR.EndMatch()
-		end
-	end
 end
 
 -- End match
@@ -1162,6 +1132,31 @@ customEventHooks.registerHandler("OnPlayerResurrect", function(eventStatus, pid)
 		testBR.CheckVictoryConditions() -- Just in case
 	end
 end)
+
+-- Check if the match should end (0 or 1 player left)
+testBR.CheckVictoryConditions = function()
+	if roundInProgress then
+		local count = 0
+		local player = 0
+
+		for pid, val in pairs(playerList) do
+			if val ~= nil then
+				count = count + 1
+				player = pid
+			end
+		end
+
+		if count == 0 then
+			tes3mp.SendMessage(0, color.Green .. "Everyone died!\n", true)
+			testBR.EndMatch()
+		elseif count == 1 then
+			tes3mp.SendMessage(0, color.Green .. Players[player].data.login.name .. " won the match!\n", true)
+			Players[player].data.BRinfo.wins = Players[player].data.BRinfo.wins + 1
+			Players[player]:Save()
+			testBR.EndMatch()
+		end
+	end
+end
 
 -- custom validator for cell change
 customEventHooks.registerValidator("OnPlayerCellChange", function(eventStatus, pid)
