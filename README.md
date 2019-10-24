@@ -29,7 +29,7 @@ function BasePlayer:Resurrect() -- Modified respawning behavior for Battle Royal
 	tes3mp.Resurrect(self.pid, enumerations.resurrect.REGULAR)
 end
 ```
-Adjust configuration in `scripts/custom/testBRConfig.lua`, **espacially the lobby cell** because I use the french version of the game, so I set the lobby as "Vivec, fosse de l'Arène".
+Adjust configuration in `scripts/custom/testBRConfig.lua`, **especially the lobby cell** because I use the french version of the game, so I set the lobby as "Vivec, fosse de l'Arène".
 
 ## Recommended changes to config.lua
 - allowWildernessRest = false
