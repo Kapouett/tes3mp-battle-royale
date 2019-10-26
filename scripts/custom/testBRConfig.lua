@@ -28,14 +28,13 @@ debugLevel = 1
 allowInteriors = true
 
 -- Define image files for map
-fogWarnFilePath = tes3mp.GetDataPath() .. "/map/fogwarn.png"
-fog1FilePath = tes3mp.GetDataPath() .. "/map/fog1.png"
-fog2FilePath = tes3mp.GetDataPath() .. "/map/fog2.png"
-fog3FilePath = tes3mp.GetDataPath() .. "/map/fog3.png"
-fogFilePaths = {fogWarnFilePath, fog1FilePath, fog2FilePath, fog3FilePath}
+testBRConfig.fogWarnFilePath = tes3mp.GetDataPath() .. "/map/fogwarn.png"
+testBRConfig.fog1FilePath = tes3mp.GetDataPath() .. "/map/fog1.png"
+testBRConfig.fog2FilePath = tes3mp.GetDataPath() .. "/map/fog2.png"
+testBRConfig.fog3FilePath = tes3mp.GetDataPath() .. "/map/fog3.png"
 
 -- default stats for players
-defaultStats = {
+testBRConfig.defaultStats = {
 playerLevel = 1,
 playerAttributes = 75,
 playerSkills = 75,
@@ -51,7 +50,7 @@ playerMarksman = 150
 -- turns out it's much easier if you don't try to combine arrays whose elements do not necesarily correspond
 -- config that determines how the fog will behave 
 fogLevelSizes = {"all", 20, 15, 10, 5, 3, 1}
-fogStageDurations = {300, 240, 240, 120, 120, 60, 60, 10}
+fogStageDurations = {300, 240, 240, 120, 120, 60, 60, 120}
 -- determines the order of how levels increase damage
 fogDamageValues = {"warn", 1, 2, 3}
 
@@ -61,12 +60,13 @@ fogDamageValues = {"warn", 1, 2, 3}
 mapBorders = {{-15,-15}, {25,25}}
 
 -- How many seconds does match proposal last
-matchProposalTime = 60
+testBRConfig.matchProposalTime = 60
 
 -- Lobby cell
-lobbyCell = "Vivec, fosse de l'Arène"
+testBRConfig.lobbyCell = "Vivec, fosse de l'Arène"
 
--- Npc used as loot containers
-corpseRefId = "br_lootbox"
+testBRConfig.lobbySpawn = { posX=-13.7, posY=-76.2, posZ=-459.4 }
+
+testBRConfig.lootTable = "testBR_loot"
 
 return testBR

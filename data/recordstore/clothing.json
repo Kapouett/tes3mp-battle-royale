@@ -1,0 +1,23 @@
+{
+  "general":{
+    "currentGeneratedNum":0
+  },
+  "permanentRecords":{
+    "br_clothing_1":{
+      "baseId":"exquisite_ring_02",
+      "name":"Anneau d'un goût exquis",
+      "enchantmentCharge":400,
+      "enchantmentId":"br_enchantment_1"
+    },
+    "br_clothing_para_shield":{
+      "baseId":"exquisite_ring_02",
+      "name":"Anneau de menottes",
+      "enchantmentCharge":20,
+      "enchantmentId":"br_enchantment_para_shield"
+    }
+  },
+  "generatedRecords":[],
+  "recordLinks":{
+  },
+  "unlinkedRecordsToCheck":[]
+}

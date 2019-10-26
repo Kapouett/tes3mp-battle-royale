@@ -174,7 +174,7 @@ end
 testBRLootManager.SpawnLootBox = function(cell, x, y, z, loot)
 	local data = {}
 
-	local refId = corpseRefId
+	local refId = "br_lootbox"
 
 	local mpNum = WorldInstance:GetCurrentMpNum() + 1
 	local location = {

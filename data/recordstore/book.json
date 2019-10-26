@@ -1,0 +1,66 @@
+{
+  "general":{
+    "currentGeneratedNum":0
+  },
+  "permanentRecords":{
+    "br_book_01":{
+      "name":"Parchemin de ouf",
+      "icon":"m\\tx_scroll_01.tga",
+      "model":"m\\text_scroll_01.nif",
+      "skillId":-1,
+      "scrollState":true,
+      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>"
+    },
+    "br_book_08":{
+      "baseId":"text_paper_roll_01",
+      "name":"Pa",
+      "enchantmentCharge":400,
+      "enchantmentId":"br_enchantment_10"
+    },
+    "br_book_summons":{
+      "name":"Sandwich à l'élémental",
+      "enchantmentCharge":400,
+      "enchantmentId":"br_enchantment_summons",
+      "icon":"m\\tx_scroll_01.tga",
+      "model":"m\\text_scroll_01.nif",
+      "skillId":-1,
+      "scrollState":true,
+      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>"
+    },
+    "br_book_05":{
+      "baseId":"text_paper_roll_01",
+      "name":"Parchemin de Fortification de Rapidité",
+      "enchantmentCharge":400,
+      "enchantmentId":"br_enchantment_7"
+    },
+    "br_book_09":{
+      "baseId":"text_paper_roll_01",
+      "name":"La boum du cimetière",
+      "enchantmentCharge":400,
+      "enchantmentId":"br_enchantment_3"
+    },
+    "br_book_04":{
+      "baseId":"text_paper_roll_01",
+      "name":"Absorption de Rapidité",
+      "enchantmentCharge":400,
+      "enchantmentId":"br_enchantment_6"
+    },
+    "br_book_06":{
+      "baseId":"text_paper_roll_01",
+      "name":"Déterioration d'armure",
+      "enchantmentCharge":400,
+      "enchantmentId":"br_enchantment_8"
+    },
+    "br_book_3":{
+      "baseId":"text_paper_roll_01",
+      "name":"Papier roulé",
+      "enchantmentCharge":400,
+      "enchantmentId":"br_enchantment_5"
+    }
+  },
+  "generatedRecords":{
+  },
+  "recordLinks":{
+  },
+  "unlinkedRecordsToCheck":[]
+}
