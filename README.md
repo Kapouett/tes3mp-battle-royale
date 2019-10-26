@@ -16,13 +16,13 @@ Edit the `scripts/player/base.lua` file to replace `BasePlayer:Resurrect()` with
 ```
 function BasePlayer:Resurrect() -- Modified respawning behavior for Battle Royale
 	-- Ensure that dying as a werewolf turns you back into your normal form
-    if self.data.shapeshift.isWerewolf == true then
-        self:SetWerewolfState(false)
-    end
+	if self.data.shapeshift.isWerewolf == true then
+		self:SetWerewolfState(false)
+	end
 
-    -- Ensure that we unequip deadly items when applicable, to prevent an
-    -- infinite death loop
-    contentFixer.UnequipDeadlyItems(self.pid)
+	-- Ensure that we unequip deadly items when applicable, to prevent an
+	-- infinite death loop
+	contentFixer.UnequipDeadlyItems(self.pid)
 
 	tes3mp.Resurrect(self.pid, enumerations.resurrect.REGULAR)
 end
