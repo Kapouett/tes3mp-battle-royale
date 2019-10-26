@@ -4,8 +4,6 @@
 
 Battle Royale game mode for TES3MP 0.7.0-alpha.
 
-This is far from finished, so I won't write anything useful here for now.
-
 - `scripts/custom/testBR.lua` is the file with most of the code.
 - `scripts/custom/testBRLootManager`.lua manages loot tables and loot spawning logic.
 - `scripts/custom/testBRConfig.lua` contains settings for the Battle Royale scripts.
