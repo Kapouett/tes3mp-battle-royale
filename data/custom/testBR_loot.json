@@ -1,23 +1,107 @@
 {
   "tables":{
-    "legendary":{
-      "br_book_fireboule":{
-        "count":5,
-        "proba":20
+    "common":{
+      "iron dagger":{
+        "count":1,
+        "proba":10
       },
-      "br_book_fortify_speed":{
-        "count":2,
-        "proba":20
+      "iron longsword":{
+        "count":1,
+        "proba":10
+      },
+      "iron war axe":{
+        "count":1,
+        "proba":10
+      },
+      "iron halberd":{
+        "count":1,
+        "proba":10
+      },
+      "iron long spear":{
+        "count":1,
+        "proba":10
+      },
+      "iron claymore":{
+        "count":1,
+        "proba":10
+      },
+      "iron club":{
+        "count":1,
+        "proba":10
+      },
+      "steel crossbow":{
+        "count":1,
+        "proba":1
+      },
+      "steel longbow":{
+        "count":1,
+        "proba":1
+      },
+      "steel mace":{
+        "count":1,
+        "proba":10
+      },
+      "steel club":{
+        "count":1,
+        "proba":10
+      },
+      "steel battle axe":{
+        "count":1,
+        "proba":10
+      },
+      "steel arrow":{
+        "count":20,
+        "proba":50
+      },
+      "silver bolt":{
+        "count":20,
+        "proba":50
       }
     },
     "rare":{
-      "br_clothing_para_shield":{
+      "glass throwing star":{
+        "count":10,
+        "proba":10
+      },
+      "glass halberd":{
         "count":1,
-        "proba":20
+        "proba":10
+      },
+      "glass dagger":{
+        "count":1,
+        "proba":10
+      },
+      "glass longsword":{
+        "count":1,
+        "proba":10
+      },
+      "ebony mace":{
+        "count":1,
+        "proba":10
+      },
+      "ebony shortsword":{
+        "count":1,
+        "proba":10
+      },
+      "dwarven claymore":{
+        "count":1,
+        "proba":10
+      },
+      "dwarven war axe":{
+        "count":1,
+        "proba":10
+      },
+      "dwarven warhammer":{
+        "count":1,
+        "proba":10
+      },
+      "dwarven crossbow":{
+        "count":1,
+        "proba":5
       }
     },
-    "common":{
-      "iron dagger":{
+    "legendary":{
+      "br_book_summons":{
         "count":1,
         "proba":20
       }
