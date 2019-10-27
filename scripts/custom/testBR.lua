@@ -529,7 +529,7 @@ testBR.DropItem = function(pid, index, z_offset)
 	local cell = tes3mp.GetCell(pid)
 	local location = {
 		posX = tes3mp.GetPosX(pid), posY = tes3mp.GetPosY(pid), posZ = tes3mp.GetPosZ(pid) + z_offset,
-		rotX = tes3mp.GetRotX(pid), rotY = 0, rotZ = tes3mp.GetRotZ(pid)
+		rotX = 0, rotY = 0, rotZ = math.random()*3.14
 	}
 
 	-- Randomize item position a little
@@ -1020,6 +1020,8 @@ testBR.ForceNextFog = function(pid)
 		-- Stop current timers
 		testBR.StopFogTimers()
 		BRAdvanceFog()
+	else
+		tes3mp.SendMessage(pid, color.Red .. "Blight cannot shrink anymore\n", false)
 	end
 end
 
@@ -1216,11 +1218,10 @@ testBR.PrintPlayerCoords = function(pid)
 	.. tostring(tes3mp.GetPosY(pid)) .. ", " .. tostring(tes3mp.GetPosZ(pid)) .. " in cell \"" .. tes3mp.GetCell(pid) .. "\"\n")
 end
 
-testBR.AddLootSpawn = function(pid, args) -- TODO: Restrict this to a certain permission level & check if the table exists
+testBR.AddLootSpawn = function(pid, lootTable)
 	if roundInProgress then
 		tes3mp.SendMessage(pid, color.Red .. "Cannot edit loot spawn points during a match!\n", false)
 	else
-		local lootTable = args[2]
 		if lootTable == nil then
 			tes3mp.SendMessage(pid, color.Red .. "Missing loot table argument\n", false)
 			return
@@ -1228,6 +1229,14 @@ testBR.AddLootSpawn = function(pid, args) -- TODO: Restrict this to a certain pe
 		testBRLootManager.AddLocation(lootTable, tes3mp.GetCell(pid), tes3mp.GetPosX(pid), tes3mp.GetPosY(pid), tes3mp.GetPosZ(pid))
 		testBRLootManager.SaveToDrive()
 		tes3mp.SendMessage(pid, color.Green .. "Added a spawn point for " .. lootTable .. "!\n", false)
+	end
+end
+
+testBR.AddLootSpawnCmd = function(pid, args) -- TODO: Restrict this to a certain permission level & check if the table exists
+	if lootTable == nil then
+		tes3mp.SendMessage(pid, color.Red .. "Missing loot table argument\n", false)
+	else
+		testBR.AddLootSpawn(pid, args[2])
 	end
 end
 
@@ -1259,7 +1268,7 @@ customCommandHooks.registerCommand("forcenextfog", testBR.ForceNextFog)
 customCommandHooks.registerCommand("forceend", testBR.AdminEndMatch)
 customCommandHooks.registerCommand("here", testBR.PrintPlayerCoords)
 
-customCommandHooks.registerCommand("loot", testBR.AddLootSpawn)
+customCommandHooks.registerCommand("loot", testBR.AddLootSpawnCmd)
 customCommandHooks.registerCommand("xc", testBR.AddLootSpawnCommon)
 customCommandHooks.registerCommand("xr", testBR.AddLootSpawnRare)
 customCommandHooks.registerCommand("xl", testBR.AddLootSpawnLegendary)
