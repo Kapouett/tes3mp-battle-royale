@@ -60,7 +60,7 @@ fogDamageValues = {"warn", 1, 2, 3}
 mapBorders = {{-15,-15}, {25,25}}
 
 -- How many seconds does match proposal last
-testBRConfig.matchProposalTime = 60
+testBRConfig.matchProposalTime = 120
 
 -- Lobby cell
 testBRConfig.lobbyCell = "Vivec, fosse de l'Arène"

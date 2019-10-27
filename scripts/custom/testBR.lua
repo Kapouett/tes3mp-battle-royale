@@ -1014,10 +1014,10 @@ testBR.AdminEndMatch = function(pid)
 	end
 end
 
--- Force fog to advance TODO: Restrict this to admins and fix timers
+-- Force fog to advance TODO: Restrict this to admins
 testBR.ForceNextFog = function(pid)
 	if #fogStageDurations >= currentFogStage + 1 then
-		-- Stop current
+		-- Stop current timers
 		testBR.StopFogTimers()
 		BRAdvanceFog()
 	end
@@ -1255,7 +1255,7 @@ customCommandHooks.registerCommand("newmatch", testBR.ProposeMatch)
 customCommandHooks.registerCommand("forcestartmatch", testBR.StartRound)
 customCommandHooks.registerCommand("join", testBR.PlayerJoin)
 customCommandHooks.registerCommand("ready", testBR.PlayerReady)
-customCommandHooks.registerCommand("forcenextfog", BRAdvanceFog)
+customCommandHooks.registerCommand("forcenextfog", testBR.ForceNextFog)
 customCommandHooks.registerCommand("forceend", testBR.AdminEndMatch)
 customCommandHooks.registerCommand("here", testBR.PrintPlayerCoords)
 
