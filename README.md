@@ -45,6 +45,6 @@ Adjust configuration in `scripts/custom/testBRConfig.lua`, **especially the lobb
 - `/join` to join a match proposition. This will put them in the lobby
 - `/ready` when you are in a lobby (the match will start when everyone is ready)
 ### Admins
-- `/forcestartmatch` to force the current proposition to start
+- `/forcestartmatch` forces the current proposition to start
 - `/forceend` terminates the current match
-- `/forcenextfog` makes the fog to progress instantly
+- `/forcenextfog` makes the fog progress instantly
