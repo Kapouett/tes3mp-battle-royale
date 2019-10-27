@@ -3,19 +3,24 @@
     "currentGeneratedNum":0
   },
   "permanentRecords":{
-    "br_book_01":{
-      "name":"Parchemin de ouf",
+    "br_book_template":{
+      "name":"Scroll template",
       "icon":"m\\tx_scroll_01.tga",
       "model":"m\\text_scroll_01.nif",
       "skillId":-1,
       "scrollState":true,
-      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>"
+      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>",
+      "enchantmentCharge":400
     },
-    "br_book_08":{
-      "baseId":"text_paper_roll_01",
-      "name":"Pa",
+    "br_book_fireboule":{
+      "name":"Fireboule",
+      "icon":"m\\tx_scroll_01.tga",
+      "model":"m\\text_scroll_01.nif",
+      "skillId":-1,
+      "scrollState":true,
+      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>",
       "enchantmentCharge":400,
-      "enchantmentId":"br_enchantment_10"
+      "enchantmentId":"br_enchantment_fireboule"
     },
     "br_book_summons":{
       "name":"Sandwich à l'élémental",
@@ -27,35 +32,55 @@
       "scrollState":true,
       "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>"
     },
-    "br_book_05":{
-      "baseId":"text_paper_roll_01",
+    "br_book_fortify_speed":{
       "name":"Parchemin de Fortification de Rapidité",
+      "icon":"m\\tx_scroll_01.tga",
+      "model":"m\\text_scroll_01.nif",
+      "skillId":-1,
+      "scrollState":true,
+      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>",
       "enchantmentCharge":400,
-      "enchantmentId":"br_enchantment_7"
+      "enchantmentId":"br_enchantment_fortifyspeed"
     },
     "br_book_09":{
-      "baseId":"text_paper_roll_01",
       "name":"La boum du cimetière",
+      "icon":"m\\tx_scroll_01.tga",
+      "model":"m\\text_scroll_01.nif",
+      "skillId":-1,
+      "scrollState":true,
+      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>",
       "enchantmentCharge":400,
-      "enchantmentId":"br_enchantment_3"
+      "enchantmentId":"br_enchantment_summon_undeads"
     },
-    "br_book_04":{
-      "baseId":"text_paper_roll_01",
+    "br_book_absorb_speed":{
+      "icon":"m\\tx_scroll_01.tga",
+      "model":"m\\text_scroll_01.nif",
+      "skillId":-1,
+      "scrollState":true,
+      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>",
+      "enchantmentCharge":400,
       "name":"Absorption de Rapidité",
-      "enchantmentCharge":400,
-      "enchantmentId":"br_enchantment_6"
+      "enchantmentId":"br_enchantment_absorbspeed"
     },
-    "br_book_06":{
-      "baseId":"text_paper_roll_01",
+    "br_book_deteriorate_armor":{
       "name":"Déterioration d'armure",
+      "icon":"m\\tx_scroll_01.tga",
+      "model":"m\\text_scroll_01.nif",
+      "skillId":-1,
+      "scrollState":true,
+      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>",
       "enchantmentCharge":400,
-      "enchantmentId":"br_enchantment_8"
+      "enchantmentId":"br_enchantment_deteriorate_armor"
     },
-    "br_book_3":{
-      "baseId":"text_paper_roll_01",
+    "br_book_summon_scamp":{
       "name":"Papier roulé",
+      "icon":"m\\tx_scroll_01.tga",
+      "model":"m\\text_scroll_01.nif",
+      "skillId":-1,
+      "scrollState":true,
+      "text":"<DIV ALIGN=\"center\"><FONT COLOR=\"000000\" SIZE=\"2\" FACE=\"Daedric\">Merde a celui qui lira.</FONT><BR>",
       "enchantmentCharge":400,
-      "enchantmentId":"br_enchantment_5"
+      "enchantmentId":"br_enchantment_summon_scamp"
     }
   },
   "generatedRecords":{

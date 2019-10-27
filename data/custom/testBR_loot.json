@@ -1,8 +1,12 @@
 {
   "tables":{
     "legendary":{
-      "br_book_summons":{
-        "count":1,
+      "br_book_fireboule":{
+        "count":5,
+        "proba":20
+      },
+      "br_book_fortify_speed":{
+        "count":2,
         "proba":20
       }
     },

@@ -35,7 +35,7 @@
           "magnitudeMin":2
         }]
     },
-    "br_enchantment_8":{
+    "br_enchantment_deteriorate_armor":{
       "subtype":0,
       "cost":1,
       "charge":400,
@@ -51,7 +51,7 @@
           "magnitudeMin":1
         }]
     },
-    "br_enchantment_3":{
+    "br_enchantment_summon_undeads":{
       "subtype":0,
       "cost":4,
       "charge":400,
@@ -119,7 +119,7 @@
           "magnitudeMin":1
         }]
     },
-    "br_enchantment_5":{
+    "br_enchantment_summon_scamp":{
       "subtype":0,
       "cost":1,
       "charge":400,
@@ -135,7 +135,7 @@
           "magnitudeMin":1
         }]
     },
-    "br_enchantment_10":{
+    "br_enchantment_fireboule":{
       "subtype":0,
       "cost":10,
       "charge":400,
@@ -151,7 +151,7 @@
           "magnitudeMin":36
         }]
     },
-    "br_enchantment_7":{
+    "br_enchantment_fortifyspeed":{
       "subtype":0,
       "cost":1,
       "charge":400,
@@ -192,7 +192,7 @@
           "magnitudeMin":100
         }]
     },
-    "br_enchantment_6":{
+    "br_enchantment_absorbspeed":{
       "subtype":0,
       "cost":1,
       "charge":400,
