@@ -437,17 +437,20 @@ testBR.SetSlowFall = function(pid, boolean)
 	end
 end
 
--- either enables or disables ghost for player
+-- Either enables or disables ghost for player
 -- this part assumes that there is a proper entry for br_ghost in recordstore
 testBR.SetGhost = function(pid, boolean)
-	testBR.DebugLog(2, "Setting slowfall mode for PID " .. tostring(pid))
+	testBR.DebugLog(2, "Setting ghost mode for PID " .. tostring(pid))
 	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() then
 		if boolean then
 			command = "player->addspell br_ghost"
+			tes3mp.SetPlayerCollisionState(false)
 		else
 			command = "player->removespell br_ghost"
+			tes3mp.SetPlayerCollisionState(true)
 		end
 		logicHandler.RunConsoleCommandOnPlayer(pid, command)
+		tes3mp.SendWorldCollisionOverride(pid, true)
 	end
 end
 
@@ -469,7 +472,7 @@ testBR.ProcessCellChange = function(pid)
 
 		testBR.CheckCellDamageLevel(pid)
 		-- TODO: lol I have no idea how to properly re-paint a tile after player "discovered it"
-		--tes3mp.SendWorldMap(pid)
+		--testBR.SendMapToPlayer(pid)
 		Players[pid]:SaveStatsDynamic()
 		Players[pid]:Save()
 	end
@@ -538,7 +541,7 @@ testBR.DropItem = function(pid, index, z_offset)
 
 	local refId = item.refId
 	local refIndex =  0 .. "-" .. mpNum
-	local itemref = {refId = item.refId, count = item.count, charge = item.charge } --item.charge}
+	local itemref = {refId = item.refId, count = item.count, charge = item.charge }
 	Players[pid]:Save()
 	testBR.DebugLog(2, "Removing item " .. tostring(item.refId))
 	Players[pid]:LoadItemChanges({itemref}, enumerations.inventory.REMOVE)	
@@ -933,7 +936,7 @@ testBR.ResetCharacter = function(pid)
 	Players[pid].data.stats.levelProgress = 0
 
 	-- Reset bounty
-	Players[pid].data.stats.bounty = 0
+	Players[pid].data.fame.bounty = 0
 	
 	-- Reset player attributes
 	for name in pairs(Players[pid].data.attributes) do
@@ -973,7 +976,8 @@ testBR.ResetCharacter = function(pid)
 	Players[pid]:LoadSkills()
 	--testBR.DebugLog(2, "Player skills loaded")
 	Players[pid]:LoadStatsDynamic()
-	--testBR.DebugLog(2, "Dynamic stats loaded")
+	--testBR.DebugLog(2, "Dynamic stats loaded")	
+	Players[pid]:LoadBounty()
 end
 
 testBR.EndCharGen = function(pid)
@@ -1092,6 +1096,10 @@ customEventHooks.registerHandler("OnPlayerFinishLogin", function(eventStatus, pi
 	if eventStatus.validCustomHandlers then --check if some other script made this event obsolete
 		testBR.VerifyPlayerData(pid)
 		testBR.RefreshPlayerState(pid)
+
+		if matchInProgress then
+			testBR.SendMapToPlayer(pid)
+		end
 	end
 end)
 
