@@ -416,6 +416,8 @@ testBR.SetAirMode = function(pid, mode)
 			Players[pid].data.attributes["Speed"].base = testBRConfig.defaultStats.playerSpeed
 		else 
 			testBR.SetSlowFall(pid, false)
+			-- TODO: make this restore the proper value
+			Players[pid].data.attributes["Speed"].base = testBRConfig.defaultStats.playerSpeed
 		end
 
 		Players[pid]:Save()
@@ -427,13 +429,10 @@ end
 -- this part assumes that there is a proper entry for slowfall_power in recordstore
 testBR.SetSlowFall = function(pid, boolean)
 	testBR.DebugLog(2, "Setting slowfall mode for PID " .. tostring(pid))
-	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() then
-		if boolean then
-			command = "player->addspell slowfall_power"
-		else
-			command = "player->removespell slowfall_power"
-		end
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
+	if boolean then
+		testBR.AddSpell(pid, "slowfall_power")
+	else
+		testBR.RemoveSpell(pid, "slowfall_power")
 	end
 end
 
@@ -441,16 +440,28 @@ end
 -- this part assumes that there is a proper entry for br_ghost in recordstore
 testBR.SetGhost = function(pid, boolean)
 	testBR.DebugLog(2, "Setting ghost mode for PID " .. tostring(pid))
+	if boolean then
+		testBR.AddSpell(pid, "br_ghost")
+	else
+		testBR.RemoveSpell(pid, "br_ghost")
+	end
+end
+
+testBR.AddSpell = function(pid, spell)
 	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() then
-		if boolean then
-			command = "player->addspell br_ghost"
-			tes3mp.SetPlayerCollisionState(false)
-		else
-			command = "player->removespell br_ghost"
-			tes3mp.SetPlayerCollisionState(true)
-		end
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
-		tes3mp.SendWorldCollisionOverride(pid, true)
+		tes3mp.ClearSpellbookChanges(pid)
+		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.ADD)
+		tes3mp.AddSpell(pid, spell)
+		tes3mp.SendSpellbookChanges(pid, true)
+	end
+end
+
+testBR.RemoveSpell = function(pid, spell)
+	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() then
+		tes3mp.ClearSpellbookChanges(pid)
+		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.REMOVE)
+		tes3mp.AddSpell(pid, spell)
+		tes3mp.SendSpellbookChanges(pid, true)
 	end
 end
 
@@ -1038,30 +1049,27 @@ end
 
 -- Apply effects to the corresponding player
 testBR.RefreshPlayerState = function(pid)
-	if Players[pid].data.BRinfo.state == playerState.SPECT then
-		testBR.SetSlowFall(pid, false)
-		Players[pid].data.attributes["Speed"].base = testBRConfig.defaultStats.playerSpeed
+	if Players[pid].data.BRinfo.state == playerState.SPECT then -- Set player as spectator
 		testBR.SetGhost(pid, true)
+		testBR.SetAirMode(pid, 0)
 
-	elseif Players[pid].data.BRinfo.matchId ~= matchId then
+	elseif Players[pid].data.BRinfo.matchId ~= matchId then -- Player's matchId is different from current matchId, force into spectator
+		testBR.DebugLog(3, "Player's matchID doesn't match")
 		testBR.SetPlayerState(pid, playerState.SPECT)
 
 	elseif Players[pid].data.BRinfo.state == playerState.JOINED then
 		if tes3mp.GetCell(pid) ~= testBRConfig.lobbyCell then -- Move player back to lobby
 			testBR.SpawnPlayer(pid, true)
-			testBR.SetSlowFall(false)
-			Players[pid].data.attributes["Speed"].base = testBRConfig.defaultStats.playerSpeed
-			testBR.SetGhost(pid, false)
 		end
+		testBR.SetGhost(pid, false)
+		testBR.SetAirMode(pid, 0)
 
 	elseif Players[pid].data.BRinfo.state == playerState.READY then
-		testBR.SetGhost(pid, false)
-
 		if tes3mp.GetCell(pid) ~= testBRConfig.lobbyCell then -- Move player back to lobby
 			testBR.SpawnPlayer(pid, true)
 		end
-		testBR.SetSlowFall(false)
-		Players[pid].data.attributes["Speed"].base = testBRConfig.defaultStats.playerSpeed
+		testBR.SetGhost(pid, false)
+		testBR.SetAirMode(pid, 0)
 
 	else -- In match
 		if (not roundInProgress) or Players[pid].data.BRinfo.matchId ~= matchId then
