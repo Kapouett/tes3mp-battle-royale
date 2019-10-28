@@ -272,10 +272,11 @@ testBR.PlayerSpells = function(pid)
 		Players[pid].data.spellbook = {}
 		Players[pid]:LoadSpellbook()
 		Players[pid]:LoadSelectedSpell()
-		command = "player->addspell feather_power"
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
-		command = "player->addspell restore_fatigue_power"
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
+		tes3mp.ClearSpellbookChanges(pid)
+		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.ADD)
+		tes3mp.AddSpell(pid, "feather_power")
+		tes3mp.AddSpell(pid, "restore_fatigue_power")
+		tes3mp.SendSpellbookChanges(pid, false)
 	end
 end
 
@@ -620,22 +621,28 @@ testBR.SetFogDamageLevel = function(pid, level)
 		return
 	end
 
-	if level == 0 then
-		command = "player->removespell fogdamage1"
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
-		command = "player->removespell fogdamage2"
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
-		command = "player->removespell fogdamage3"
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
+	if level == 0 then --TODO: Test
+		tes3mp.ClearSpellbookChanges(pid)
+		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.REMOVE)
+		tes3mp.AddSpell(pid, "fogdamage1")
+		tes3mp.AddSpell(pid, "fogdamage2")
+		tes3mp.AddSpell(pid, "fogdamage3")
+		tes3mp.SendSpellbookChanges(pid, true)
 	elseif level == 1 then
-		command = "player->addspell fogdamage1"
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
+		tes3mp.ClearSpellbookChanges(pid)
+		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.ADD)
+		tes3mp.AddSpell(pid, "fogdamage1")
+		tes3mp.SendSpellbookChanges(pid, true)
 	elseif level == 2 then
-		command = "player->addspell fogdamage2"
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
+		tes3mp.ClearSpellbookChanges(pid)
+		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.ADD)
+		tes3mp.AddSpell(pid, "fogdamage2")
+		tes3mp.SendSpellbookChanges(pid, true)
 	elseif level == 3 then
-		command = "player->addspell fogdamage3"
-		logicHandler.RunConsoleCommandOnPlayer(pid, command)
+		tes3mp.ClearSpellbookChanges(pid)
+		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.ADD)
+		tes3mp.AddSpell(pid, "fogdamage3")
+		tes3mp.SendSpellbookChanges(pid, true)
 	end
 end
 
