@@ -10,7 +10,7 @@ Battle Royale game mode for TES3MP 0.7.0-alpha.
 - `data` contains images to draw fog on the map and custom records needed for the script to work, as well as a sample loot table.
 
 ## Installation
-Drop the script and data folders in your server folder and add `require("custom/testBR")` to scripts/customScripts.lua.
+Drop the script and data folders in your server folder and add `require("custom/testBR")` to `scripts/customScripts.lua`.
 
 Edit the `scripts/player/base.lua` file to replace `BasePlayer:Resurrect()` with
 ```
@@ -30,14 +30,14 @@ end
 Adjust configuration in `scripts/custom/testBRConfig.lua`, **especially the lobby cell** because I use the french version of the game, so I set the lobby as "Vivec, fosse de l'Arène".
 
 ## Recommended changes to config.lua
-- allowWildernessRest = false
+- config.allowWildernessRest = false
 - config.allowWait = false
-- shareMapExploration = false
-- respawnAtImperialShrine = false
-- respawnAtTribunalTemple = false
-- playersRespawn = true
-- bountyResetOnDeath = true
-- bountyDeathPenalty = false
+- config.shareMapExploration = false
+- config.respawnAtImperialShrine = false
+- config.respawnAtTribunalTemple = false
+- config.playersRespawn = true
+- config.bountyResetOnDeath = true
+- config.bountyDeathPenalty = false
 
 ## Usage
 ### Users
