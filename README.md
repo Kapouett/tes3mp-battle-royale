@@ -12,28 +12,12 @@ Battle Royale game mode for TES3MP 0.7.0-alpha.
 ## Installation
 Drop the script and data folders in your server folder and add `require("custom/testBR")` to `scripts/customScripts.lua`.
 
-Edit the `scripts/player/base.lua` file to replace `BasePlayer:Resurrect()` with
-```
-function BasePlayer:Resurrect() -- Modified respawning behavior for Battle Royale
-	-- Ensure that dying as a werewolf turns you back into your normal form
-	if self.data.shapeshift.isWerewolf == true then
-		self:SetWerewolfState(false)
-	end
-
-	-- Ensure that we unequip deadly items when applicable, to prevent an
-	-- infinite death loop
-	contentFixer.UnequipDeadlyItems(self.pid)
-
-	tes3mp.Resurrect(self.pid, enumerations.resurrect.REGULAR)
-end
-```
 Adjust configuration in `scripts/custom/testBRConfig.lua`, **especially the lobby cell** because I use the french version of the game, so I set the lobby as "Vivec, fosse de l'Arène".
 
 ## Recommended changes to config.lua
 - config.allowWildernessRest = false
 - config.allowWait = false
 - config.shareMapExploration = false
-- config.playersRespawn = true
 
 ## Usage
 ### Users
