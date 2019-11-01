@@ -90,7 +90,7 @@ TODO:
 - Reset world when a match starts
 - Let spectators teleport to players
 - Add customization options (fix race/class/birthsign bonuses)
-- Cancel fog timers when a match ends
+- Fix chameleon not showing on other players
 
 ]]
 
@@ -902,8 +902,35 @@ end
 
 -- Remove dead player from match, broadcast death notification and check for victory
 testBR.ProcessDeath = function(pid)
+	local respawnDelay = 2
+
 	if roundInProgress and Players[pid].data.BRinfo.state == playerState.INMATCH then -- Player was in match
-		-- Display death to everyone
+		respawnDelay = config.deathTime
+
+		-- Send kill message
+		local deathReason = " committed suicide"
+
+		if tes3mp.DoesPlayerHavePlayerKiller(pid) then
+			local killerPid = tes3mp.GetPlayerKillerPid(pid)
+
+			if pid ~= killerPid then
+				deathReason = " was killed by " .. logicHandler.GetChatName(killerPid)
+			end
+		else
+			local killerName = tes3mp.GetPlayerKillerName(pid)
+
+			if killerName ~= "" then
+				deathReason = " was killed by " .. killerName
+			end
+		end
+
+		local message = logicHandler.GetChatName(pid) .. deathReason .. ".\n"
+
+		tes3mp.SendMessage(pid, message, true)
+
+
+
+		-- Broadcast death message box to everyone
 		for i, player in pairs(Players) do
 			tes3mp.MessageBox(i, -1, Players[pid].data.login.name .. " died. " .. tostring(testBR.TableLen(playerList)-1) .. " player(s) remaining")
 		end
@@ -918,6 +945,26 @@ testBR.ProcessDeath = function(pid)
 	end
 	testBR.SetFogDamageLevel(pid, 0)
 	Players[pid]:Save()
+
+	local resurrectTimerId = tes3mp.CreateTimerEx("BROnDeathTimeExpiration", time.seconds(respawnDelay), "i", pid)
+	tes3mp.StartTimer(resurrectTimerId)
+end
+
+BROnDeathTimeExpiration = function(pid)
+	testBR.ResurrectPlayer(pid)
+end
+
+testBR.ResurrectPlayer = function(pid) -- Modified respawning behavior for Battle Royale
+	-- Ensure that dying as a werewolf turns you back into your normal form
+    if Players[pid].data.shapeshift.isWerewolf == true then
+        Players[pid]:SetWerewolfState(false)
+    end
+
+    -- Ensure that we unequip deadly items when applicable, to prevent an
+    -- infinite death loop
+    contentFixer.UnequipDeadlyItems(pid)
+
+	tes3mp.Resurrect(pid, enumerations.resurrect.REGULAR)
 end
 
 testBR.VerifyPlayerData = function(pid)
@@ -1118,10 +1165,14 @@ customEventHooks.registerHandler("OnPlayerFinishLogin", function(eventStatus, pi
 	end
 end)
 
+-- Override death and respawning behaviour
 customEventHooks.registerHandler("OnPlayerDeath", function(eventStatus, pid)
-	if eventStatus.validCustomHandlers then --check if some other script made this event obsolete
-		testBR.ProcessDeath(pid)
-	end
+	testBR.ProcessDeath(pid)
+end)
+
+-- Disable normal death behavior
+customEventHooks.registerValidator("OnPlayerDeath", function(eventStatus, pid)
+	return customEventHooks.makeEventStatus(false, true)
 end)
 
 customEventHooks.registerHandler("OnCellLoad", function(eventStatus, pid)
@@ -1150,7 +1201,7 @@ customEventHooks.registerHandler("OnPlayerEndCharGen", function(eventstatus, pid
 end)
 
 
-customEventHooks.registerHandler("OnPlayerResurrect", function(eventStatus, pid)
+customEventHooks.registerHandler("OnPlayerResurrect", function(eventStatus, pid) -- TODO: Move this to the resurrect fuction
 	if eventStatus.validCustomHandlers then --check if some other script made this event obsolete
 		if Players[pid] == nil then
 			testBR.DebugLog(3, "Nil player respawned?!")

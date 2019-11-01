@@ -69,4 +69,25 @@ testBRConfig.lobbySpawn = { posX=-13.7, posY=-76.2, posZ=-459.4 }
 
 testBRConfig.lootTable = "testBR_loot"
 
+-- ====================== LOCALIZATION ======================
+
+-- Message box displayed on joining a match
+testBRConfig.strWelcomeToLobby = "Welcome to the lobby!"
+
+-- Message box displayed when a player tries to exit the lobby cell
+testBRConfig.strCantLeaveLobby = "You cannot leave the lobby!"
+
+-- Displayed when a player tries to enter an interior cell while they are disabled in the br config
+testBRConfig.strCantEnterInterior = "You cannot enter interiors!"
+
+-- Message box displayed one minute before a blight shrink
+testBRConfig.strBlightAlert1Minute = "Blight shrinking in a minute!"
+
+-- Message box displayed in the last seconds before a blight shrink
+testBRConfig.strBlightAlertSec1 = "Blight shrinking in "
+testBRConfig.strBlightAlertSec2 = " seconds"
+
+-- Message box displayed when a player respawns as a spectator
+testBRConfig.strGhost = "You're now a spooky ghost!"
+
 return testBR
