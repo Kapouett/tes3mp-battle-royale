@@ -33,11 +33,7 @@ Adjust configuration in `scripts/custom/testBRConfig.lua`, **especially the lobb
 - config.allowWildernessRest = false
 - config.allowWait = false
 - config.shareMapExploration = false
-- config.respawnAtImperialShrine = false
-- config.respawnAtTribunalTemple = false
 - config.playersRespawn = true
-- config.bountyResetOnDeath = true
-- config.bountyDeathPenalty = false
 
 ## Usage
 ### Users
