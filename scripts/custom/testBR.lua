@@ -494,7 +494,7 @@ testBR.SpawnPlayer = function(pid, spawnInLobby)
 	testBR.DebugLog(2, "Spawning player " .. tostring(pid))
 	if spawnInLobby then
 		chosenSpawnPoint = {testBRConfig.lobbyCell, testBRConfig.lobbySpawn.posX, testBRConfig.lobbySpawn.posY, testBRConfig.lobbySpawn.posZ, 0}
-		tes3mp.MessageBox(pid, -1, "Welcome to the lobby!")
+		tes3mp.MessageBox(pid, -1, testBRConfig.strWelcomeToLobby)
 	else
 		-- TEST: use random spawn point for now
 		random_x = math.random(-40000,80000)
@@ -673,9 +673,9 @@ end
 BRHandleShrinkTimerAlertTimeout = function()
 	for pid, player in pairs(Players) do
 		if fogAlertRemainingTime >= 60 then
-			tes3mp.MessageBox(pid, -1, "Blight shrinking in a minute!")
+			tes3mp.MessageBox(pid, -1, testBRConfig.strBlightAlert1Minute)
 		else
-			tes3mp.MessageBox(pid, -1, "Blight shrinking in " .. tostring(fogAlertRemainingTime) .. " seconds")
+			tes3mp.MessageBox(pid, -1, testBRConfig.strBlightAlertSec1 .. tostring(fogAlertRemainingTime) .. testBRConfig.strBlightAlertSec2)
 		end
 	end
 
@@ -1213,7 +1213,7 @@ customEventHooks.registerHandler("OnPlayerResurrect", function(eventStatus, pid)
 		else
 			-- TODO: Spectator effects (disable combat but allow fun interactions)
 			testBR.SetPlayerState(playerState.SPECT)
-			tes3mp.MessageBox(pid, -1, "You're now a spooky ghost!")
+			tes3mp.MessageBox(pid, -1, testBRConfig.strGhost)
 		end
 
 		testBR.CheckVictoryConditions() -- Just in case
@@ -1261,7 +1261,7 @@ end
 customEventHooks.registerValidator("OnPlayerCellChange", function(eventStatus, pid)
 	-- Prevent players in lobby from leaving it
 	if matchProposalInProgress and tes3mp.GetCell(pid) ~= testBRConfig.lobbyCell and Players[pid].data.BRinfo.state >= 1 then
-		tes3mp.MessageBox(pid, -1, "You cannot leave the lobby!")
+		tes3mp.MessageBox(pid, -1, testBRConfig.strCantLeaveLobby)
 		testBR.SpawnPlayer(pid, true)
         return customEventHooks.makeEventStatus(false, true)
 	end
@@ -1275,7 +1275,7 @@ customEventHooks.registerValidator("OnPlayerCellChange", function(eventStatus, p
 		_, _, cellX, cellY = string.find(tes3mp.GetCell(pid), patterns.exteriorCell)
     	if cellX == nil or cellY == nil then
 			testBR.DebugLog(1, "Cell is not external and can not be entered")
-			tes3mp.MessageBox(pid, -1, "You cannot enter interiors!")
+			tes3mp.MessageBox(pid, -1, testBRConfig.strCantEnterInterior)
 			Players[pid].data.location.posX = tes3mp.GetPreviousCellPosX(pid)
 			Players[pid].data.location.posY = tes3mp.GetPreviousCellPosY(pid)
 			Players[pid].data.location.posZ = tes3mp.GetPreviousCellPosZ(pid)
