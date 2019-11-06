@@ -1,5 +1,7 @@
 testBRConfig = {}
 
+-- This file contains configuration and localization data, feel free to edit it to fit your needs
+
 -- ====================== CONFIG ======================
 
 -- print out a lot more messages about what script is doing
@@ -71,6 +73,9 @@ testBRConfig.lootTable = "testBR_loot"
 
 -- ====================== LOCALIZATION ======================
 
+-- Match started with {x} players
+testBRConfig.strMatchStart = "Starting match with {x} players!"
+
 -- Message box displayed on joining a match
 testBRConfig.strWelcomeToLobby = "Welcome to the lobby!"
 
@@ -83,12 +88,26 @@ testBRConfig.strCantEnterInterior = "You cannot enter interiors!"
 -- Message box displayed one minute before a blight shrink
 testBRConfig.strBlightAlert1Minute = "Blight shrinking in a minute!"
 
--- Message box displayed in the last seconds before a blight shrink
-testBRConfig.strBlightAlertSec1 = "Blight shrinking in "
-testBRConfig.strBlightAlertSec2 = " seconds"
+-- Message box displayed {x} seconds before a blight shrink
+testBRConfig.strBlightAlertSec = "Blight shrinking in {x} seconds"
 
 -- Message box displayed when a player respawns as a spectator
 testBRConfig.strGhost = "You're now a spooky ghost!"
+
+-- Chat message displayed when {x} kills themselves
+testBRConfig.strDied = "{x} died."
+
+-- Chat message displayed when {y} was killed by {x}
+testBRConfig.strKill = "{x} was killed by {y}."
+
+-- {x} died, {y} players remaining.
+testBRConfig.strXDiedYPlayersRemaining = "{x} died, {y} players remaining."
+
+-- End of match, everyone died
+testBRConfig.strEndNoWinner = "Everyone died."
+
+-- End of match, {x} won
+testBRConfig.strEndWin = "{x} won the match!"
 
 return testBR
 

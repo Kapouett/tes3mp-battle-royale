@@ -227,7 +227,8 @@ testBR.StartRound = function()
 		testBR.PlayerInit(pid)
 	end
 
-	tes3mp.SendMessage(0, "Starting match with " .. tostring(testBR.CountState(playerState.INMATCH)) .. " players!\n", true)
+	local message = string.gsub( testBRConfig.strMatchStart, "{x}", tostring(testBR.CountState(playerState.INMATCH)) )
+	tes3mp.SendMessage(0, message .. "\n", true)
 
 	testBR.StartFogTimer(fogStageDurations[currentFogStage])
 end
@@ -671,12 +672,14 @@ end
 
 -- Last minute and last 10 seconds warnings
 BRHandleShrinkTimerAlertTimeout = function()
+	local message = ""
+	if fogAlertRemainingTime >= 60 then
+		message = testBRConfig.strBlightAlert1Minute
+	else
+		message = string.gsub(testBRConfig.strBlightAlertSec, "{x}", tostring(fogAlertRemainingTime))
+	end
 	for pid, player in pairs(Players) do
-		if fogAlertRemainingTime >= 60 then
-			tes3mp.MessageBox(pid, -1, testBRConfig.strBlightAlert1Minute)
-		else
-			tes3mp.MessageBox(pid, -1, testBRConfig.strBlightAlertSec1 .. tostring(fogAlertRemainingTime) .. testBRConfig.strBlightAlertSec2)
-		end
+		tes3mp.MessageBox(pid, -1, message)
 	end
 
 	local nextTimer = 1
@@ -908,31 +911,34 @@ testBR.ProcessDeath = function(pid)
 		respawnDelay = config.deathTime
 
 		-- Send kill message
-		local deathReason = " committed suicide"
+		local deathReason = testBRConfig.strDied
 
 		if tes3mp.DoesPlayerHavePlayerKiller(pid) then
 			local killerPid = tes3mp.GetPlayerKillerPid(pid)
 
 			if pid ~= killerPid then
-				deathReason = " was killed by " .. logicHandler.GetChatName(killerPid)
+				deathReason = string.gsub(testBRConfig.strKill, "{y}", logicHandler.GetChatName(killerPid))
 			end
 		else
 			local killerName = tes3mp.GetPlayerKillerName(pid)
 
-			if killerName ~= "" then
-				deathReason = " was killed by " .. killerName
+			if killerName ~= "" then				
+				deathReason = string.gsub(testBRConfig.strKill, "{y}", killerName)
 			end
 		end
 
-		local message = logicHandler.GetChatName(pid) .. deathReason .. ".\n"
+		local message = string.gsub(deathReason, "{x}", logicHandler.GetChatName(pid))
 
-		tes3mp.SendMessage(pid, message, true)
+		tes3mp.SendMessage(pid, message .. "\n", true)
 
 
 
 		-- Broadcast death message box to everyone
+		local messageBoxStr = str.gsub( testBRConfig.strXDiedYPlayersRemaining, "{x}", logicHandler.GetChatName(pid) )
+		messageBoxStr = str.gsub( messageBoxStr, "{y}", tostring(testBR.TableLen(playerList)-1) )
+
 		for i, player in pairs(Players) do
-			tes3mp.MessageBox(i, -1, Players[pid].data.login.name .. " died. " .. tostring(testBR.TableLen(playerList)-1) .. " player(s) remaining")
+			tes3mp.MessageBox(i, -1, messageBoxStr)
 		end
 
 		testBR.DropAllItems(pid)
@@ -1246,10 +1252,10 @@ testBR.CheckVictoryConditions = function()
 		end
 
 		if count == 0 then
-			tes3mp.SendMessage(0, color.Green .. "Everyone died!\n", true)
+			tes3mp.SendMessage(0, color.Green .. testBRConfig.strEndNoWinner .. "\n", true)
 			testBR.EndMatch()
 		elseif count == 1 then
-			tes3mp.SendMessage(0, color.Green .. playerName .. " won the match!\n", true)
+			tes3mp.SendMessage(0, color.Green .. string.gsub(testBRConfig.strEndWin, "{x}", playerName) .. "\n", true)
 			Players[player].data.BRinfo.wins = Players[player].data.BRinfo.wins + 1
 			Players[player]:Save()
 			testBR.EndMatch()
@@ -1274,7 +1280,7 @@ customEventHooks.registerValidator("OnPlayerCellChange", function(eventStatus, p
 	if (not allowInteriors) and roundInProgress and Players[pid].data.BRinfo.state == playerState.INMATCH then
 		_, _, cellX, cellY = string.find(tes3mp.GetCell(pid), patterns.exteriorCell)
     	if cellX == nil or cellY == nil then
-			testBR.DebugLog(1, "Cell is not external and can not be entered")
+			testBR.DebugLog(1, tostring(pid).." tried to enter an interior")
 			tes3mp.MessageBox(pid, -1, testBRConfig.strCantEnterInterior)
 			Players[pid].data.location.posX = tes3mp.GetPreviousCellPosX(pid)
 			Players[pid].data.location.posY = tes3mp.GetPreviousCellPosY(pid)
@@ -1327,10 +1333,6 @@ end
 testBR.AdminTest = function(pid, a)
 	for machin, truc in pairs(a) do
 		tes3mp.SendMessage(pid, tostring(machin) .. ": " .. tostring(truc) .. "\n", false)
-	end
-	if Players[pid]:IsAdmin() then
-		testBRLootManager.AddLocation("common", tes3mp.GetCell(pid), tes3mp.GetPosX(pid), tes3mp.GetPosY(pid), tes3mp.GetPosZ(pid))
-		testBRLootManager.SaveToDrive()
 	end
 end
 
