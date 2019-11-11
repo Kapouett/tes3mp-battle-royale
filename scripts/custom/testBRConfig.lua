@@ -5,7 +5,7 @@ testBRConfig = {}
 -- ====================== CONFIG ======================
 
 -- print out a lot more messages about what script is doing
-debugLevel = 1
+testBRConfig.debugLevel = 1
 
 -- how fast time passes
 -- you will most likely want this to be very low in order to have skybox remain the same
@@ -30,6 +30,7 @@ debugLevel = 1
 allowInteriors = true
 
 -- Define image files for map
+testBRConfig.fogNoneFilePath = tes3mp.GetDataPath() .. "/map/fognone.png" -- This should point to a fully transparent image
 testBRConfig.fogWarnFilePath = tes3mp.GetDataPath() .. "/map/fogwarn.png"
 testBRConfig.fog1FilePath = tes3mp.GetDataPath() .. "/map/fog1.png"
 testBRConfig.fog2FilePath = tes3mp.GetDataPath() .. "/map/fog2.png"
@@ -71,7 +72,23 @@ testBRConfig.lobbySpawn = { posX=-13.7, posY=-76.2, posZ=-459.4 }
 
 testBRConfig.lootTable = "testBR_loot"
 
+
+-- ======================== COMMANDS ========================
+
+-- Propose a new match
+testBRConfig.cmdNewMatch = "newmatch"
+
+-- Join the current match proposal
+testBRConfig.cmdJoin = "join"
+
+-- Mark yourself as ready
+testBRConfig.cmdReady = "ready"
+
+
 -- ====================== LOCALIZATION ======================
+
+-- Displayed in chat when a new match is proposed
+testBRConfig.strNewMatchProposal = color.Green .. "New match!" .. color.White .. " Use /" .. testBRConfig.cmdJoin .. " to participate! Players have " .. tostring(testBRConfig.matchProposalTime) .. " seconds to join"
 
 -- Match started with {x} players
 testBRConfig.strMatchStart = "Starting match with {x} players!"
@@ -81,6 +98,9 @@ testBRConfig.strWelcomeToLobby = "Welcome to the lobby!"
 
 -- Message box displayed when a player tries to exit the lobby cell
 testBRConfig.strCantLeaveLobby = "You cannot leave the lobby!"
+
+-- Message box displayed on match start
+testBRConfig.strBeginMatch = "Begin match!"
 
 -- Displayed when a player tries to enter an interior cell while they are disabled in the br config
 testBRConfig.strCantEnterInterior = "You cannot enter interiors!"
@@ -109,5 +129,17 @@ testBRConfig.strEndNoWinner = "Everyone died."
 -- End of match, {x} won
 testBRConfig.strEndWin = "{x} won the match!"
 
-return testBR
+-- A match is already running
+testBRConfig.strMatchAlreadyRunning = "A match is already running"
+
+-- A match proposal is already running, join it with /join
+testBRConfig.strProposalAlreadyRunning = "A match proposal is already running, join it with /" .. testBRConfig.cmdJoin
+
+-- Chat message displayed when {x} uses /ready
+testBRConfig.strPlayerReady = "{x} is ready."
+
+-- No current match, start one with /newmatch!
+testBRConfig.strNoCurrentMatch = "No current match, start one with /" .. testBRConfig.cmdNewMatch .. "!"
+
+return testBRConfig
 

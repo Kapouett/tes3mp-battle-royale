@@ -130,7 +130,7 @@
           "skill":-1,
           "rangeType":0,
           "area":0,
-          "duration":1,
+          "duration":60,
           "magnitudeMax":1,
           "magnitudeMin":1
         }]
