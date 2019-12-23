@@ -9,25 +9,25 @@ testBRConfig.debugLevel = 1
 
 -- how fast time passes
 -- you will most likely want this to be very low in order to have skybox remain the same
---timeScale = 0.1
+--testBRConfig.timeScale = 0.1
 
 -- determines defaulttime of day for maps that do not have it specified
---timeOfDay = 9
+--testBRConfig.timeOfDay = 9
 
 -- determines default weather
---weather = 0
+--testBRConfig.weather = 0
 
 -- Determines if the effects from player's chosen race get applied
---allowRacePowers = false
+--testBRConfig.allowRacePowers = false
 
 -- Determines if the effects from player's chosen celestial sign get applied
---allowSignPowers = false
+--testBRConfig.allowSignPowers = false
 
 -- Determines if it is possible to use different presets of equipment / stats 
---allowClasses = true
+--testBRConfig.allowClasses = true
 
 -- Determines if players are allowed to enter interiors
-allowInteriors = true
+testBRConfig.allowInteriors = true
 
 -- Define image files for map
 testBRConfig.fogNoneFilePath = tes3mp.GetDataPath() .. "/map/fognone.png" -- This should point to a fully transparent image
@@ -52,15 +52,15 @@ playerMarksman = 150
 
 -- turns out it's much easier if you don't try to combine arrays whose elements do not necesarily correspond
 -- config that determines how the fog will behave 
-fogLevelSizes = {"all", 20, 15, 10, 5, 3, 1}
-fogStageDurations = {300, 240, 240, 120, 120, 60, 60, 120}
+testBRConfig.fogLevelSizes = {"all", 20, 15, 10, 5, 3, 1}
+testBRConfig.fogStageDurations = {300, 240, 240, 120, 120, 60, 60, 120}
 -- determines the order of how levels increase damage
-fogDamageValues = {"warn", 1, 2, 3}
+testBRConfig.fogDamageValues = {"warn", 1, 2, 3}
 
 
 -- used to determine the cell span on which to use the fog logic
 -- {{min_X, min_Y},{max_X, max_Y}}
-mapBorders = {{-15,-15}, {25,25}}
+testBRConfig.mapBorders = {{-15,-15}, {25,25}}
 
 -- How many seconds does match proposal last
 testBRConfig.matchProposalTime = 120

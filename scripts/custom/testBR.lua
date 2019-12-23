@@ -209,7 +209,7 @@ testBR.StartRound = function()
 
 	testBR.LoadLootTables()
 
-	fogGridLimits = testBR.GenerateFogGrid(fogLevelSizes)
+	fogGridLimits = testBR.GenerateFogGrid(testBRConfig.fogLevelSizes)
 
 	currentFogStage = 1
 
@@ -233,7 +233,7 @@ testBR.StartRound = function()
 	local message = string.gsub( testBRConfig.strMatchStart, "{x}", tostring(testBR.CountState(playerState.INMATCH)) )
 	tes3mp.SendMessage(0, message .. "\n", true)
 
-	testBR.StartFogTimer(fogStageDurations[currentFogStage])
+	testBR.StartFogTimer(testBRConfig.fogStageDurations[currentFogStage])
 
 	-- Clean map
 	tes3mp.ClearMapChanges()
@@ -729,8 +729,8 @@ BRAdvanceFog = function()
 
 	tes3mp.SendMessage(0, "Blight is shrinking.\n", true)
 	currentFogStage = currentFogStage + 1
-	if currentFogStage <= #fogStageDurations then
-		testBR.StartFogTimer(fogStageDurations[currentFogStage]) -- Start timer for next stage
+	if currentFogStage <= #testBRConfig.fogStageDurations then
+		testBR.StartFogTimer(testBRConfig.fogStageDurations[currentFogStage]) -- Start timer for next stage
 	end
 
 	testBR.UpdateMap()
@@ -749,7 +749,7 @@ end
 
 -- returns a list of squares that are to be used for fog levels
 -- for example: { {{10, 0}, {0, 10}}, {{5, 5}, {5, 5}}, {} }
-testBR.GenerateFogGrid = function(fogLevelSizes)	
+testBR.GenerateFogGrid = function(fogLevelSizes)
 	testBR.DebugLog(1, "Generating fog grid")
 	generatedFogGrid = {}
 
@@ -762,8 +762,8 @@ testBR.GenerateFogGrid = function(fogLevelSizes)
 		-- or lol, we can just check if this is first time going through the loop
 		-- this does assume that config is not messed up, that first entry is meant to be whole area
 		if level == 1 then
-			table.insert(generatedFogGrid[level], {mapBorders[1][1], mapBorders[1][2]})
-			table.insert(generatedFogGrid[level], {mapBorders[2][1], mapBorders[2][2]})
+			table.insert(generatedFogGrid[level], {testBRConfig.mapBorders[1][1], testBRConfig.mapBorders[1][2]})
+			table.insert(generatedFogGrid[level], {testBRConfig.mapBorders[2][1], testBRConfig.mapBorders[2][2]})
 		else
 			-- check out some stuff about previous level
 			xIncludesZero = 0
@@ -874,10 +874,10 @@ end
 
 testBR.GetCurrentDamageLevel = function(level)
 	testBR.DebugLog(1, "Looking up damage level for level " .. tostring(level))
-	if currentFogStage - level > #fogDamageValues then
-		return fogDamageValues[#fogDamageValues]
+	if currentFogStage - level > #testBRConfig.fogDamageValues then
+		return testBRConfig.fogDamageValues[#testBRConfig.fogDamageValues]
 	else
-		return fogDamageValues[currentFogStage - level]
+		return testBRConfig.fogDamageValues[currentFogStage - level]
 	end
 end
 
@@ -888,8 +888,8 @@ testBR.UpdateMap = function()
 	for levelIndex=1,#fogGridLimits do
 		-- at this point I am just banging code together until it works
 		-- got lucky with the first condition, added second condition in order to limit logic only to relevant levels
-		if levelIndex - currentFogStage < #fogDamageValues and fogDamageValues[currentFogStage - levelIndex] ~= nil then
-			testBR.DebugLog(1, "Level " .. tostring(levelIndex) .. " gets fog level " .. tostring(fogDamageValues[currentFogStage - levelIndex]))
+		if levelIndex - currentFogStage < #testBRConfig.fogDamageValues and testBRConfig.fogDamageValues[currentFogStage - levelIndex] ~= nil then
+			testBR.DebugLog(1, "Level " .. tostring(levelIndex) .. " gets fog level " .. tostring(testBRConfig.fogDamageValues[currentFogStage - levelIndex]))
 			
 			-- iterate through all cells in this level
 			for x=fogGridLimits[levelIndex][1][1],fogGridLimits[levelIndex][2][1] do
@@ -1137,7 +1137,7 @@ end
 
 -- Force fog to advance TODO: Restrict this to admins
 testBR.ForceNextFog = function(pid)
-	if #fogStageDurations >= currentFogStage + 1 then
+	if #testBRConfig.fogStageDurations >= currentFogStage + 1 then
 		-- Stop current timers
 		testBR.StopFogTimers()
 		BRAdvanceFog()
@@ -1326,7 +1326,7 @@ customEventHooks.registerValidator("OnPlayerCellChange", function(eventStatus, p
 		return customEventHooks.makeEventStatus(true,true)
 	end--]]
 
-	if (not allowInteriors) and roundInProgress and Players[pid].data.BRinfo.state == playerState.INMATCH then
+	if (not testBRConfig.allowInteriors) and roundInProgress and Players[pid].data.BRinfo.state == playerState.INMATCH then
 		_, _, cellX, cellY = string.find(tes3mp.GetCell(pid), patterns.exteriorCell)
     	if cellX == nil or cellY == nil then
 			testBR.DebugLog(1, tostring(pid).." tried to enter an interior")
