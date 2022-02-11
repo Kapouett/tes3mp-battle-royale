@@ -30,11 +30,11 @@ testBRConfig.debugLevel = 1
 testBRConfig.allowInteriors = true
 
 -- Define image files for map
-testBRConfig.fogNoneFilePath = tes3mp.GetDataPath() .. "/map/fognone.png" -- This should point to a fully transparent image
-testBRConfig.fogWarnFilePath = tes3mp.GetDataPath() .. "/map/fogwarn.png"
-testBRConfig.fog1FilePath = tes3mp.GetDataPath() .. "/map/fog1.png"
-testBRConfig.fog2FilePath = tes3mp.GetDataPath() .. "/map/fog2.png"
-testBRConfig.fog3FilePath = tes3mp.GetDataPath() .. "/map/fog3.png"
+testBRConfig.fogNoneFilePath = tes3mp.GetDataPath() .. "/map/br_fog_none.png" -- This should point to a fully transparent image
+testBRConfig.fogWarnFilePath = tes3mp.GetDataPath() .. "/map/br_fog_warn.png"
+testBRConfig.fog1FilePath = tes3mp.GetDataPath() .. "/map/br_fog_1.png"
+testBRConfig.fog2FilePath = tes3mp.GetDataPath() .. "/map/br_fog_2.png"
+testBRConfig.fog3FilePath = tes3mp.GetDataPath() .. "/map/br_fog_3.png"
 
 -- default stats for players
 testBRConfig.defaultStats = {
@@ -84,6 +84,8 @@ testBRConfig.cmdJoin = "join"
 -- Mark yourself as ready
 testBRConfig.cmdReady = "ready"
 
+-- Display the menu
+testBRConfig.cmdMenu = "br"
 
 -- ====================== LOCALIZATION ======================
 
@@ -140,6 +142,9 @@ testBRConfig.strPlayerReady = "{x} is ready."
 
 -- No current match, start one with /newmatch!
 testBRConfig.strNoCurrentMatch = "No current match, start one with /" .. testBRConfig.cmdNewMatch .. "!"
+
+-- Menu title
+testBRConfig.menuTitle = "Battle Royale"
 
 return testBRConfig
 

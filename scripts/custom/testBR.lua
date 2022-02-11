@@ -95,16 +95,25 @@ TODO:
 
 --#endregion
 
-testBR = {}
+TestBR = {}
 
 -- Load config file
 local brConfig = require("custom/testBRConfig")
 
+-- Load GUI
+local brGUI = require("custom/testBR/gui")
+
+local lootManager = require("custom/testBR/testBRLootManager")
+
+local brRecords = require("custom/testBR/records")
+
 --#region ====================== GLOBAL VARIABLES ======================
 
 local PLAYER_STATE = { SPECT = 0, JOINED = 1, READY = 2, INMATCH = 3 }
+TestBR.PLAYER_STATE = PLAYER_STATE -- Export enum
 
 local GAME_STATE = { NONE = 0, LOBBY = 1, INMATCH = 2 }
+TestBR.GAME_STATE = GAME_STATE -- Export enum
 
 local gameState = GAME_STATE.NONE
 
@@ -130,15 +139,15 @@ local fogTimer
 
 local fogAlertTimer
 
-local fogFilePaths = {testBRConfig.fogWarnFilePath, testBRConfig.fog1FilePath, testBRConfig.fog2FilePath, testBRConfig.fog3FilePath}
+local fogFilePaths = {brConfig.fogWarnFilePath, brConfig.fog1FilePath, brConfig.fog2FilePath, brConfig.fog3FilePath}
 --#endregion
 
 
 --#region ====================== MISC ======================
 
 -- Used to easily regulate the level of information when debugging
-function testBR.DebugLog(debugLevel, message)
-	if debugLevel >= testBRConfig.debugLevel then
+function TestBR.DebugLog(debugLevel, message)
+	if debugLevel >= brConfig.debugLevel then
 		tes3mp.LogMessage(math.max(debugLevel, 2), "BR: " .. message)
 	end
 end
@@ -150,7 +159,7 @@ local time = require("time")
 math.randomseed(os.time())
 
 -- Get the number of non-nil entries in a table
-function testBR.TableLen(T)
+function TestBR.TableLen(T)
 	local count = 0
 	for k, v in pairs(T) do
 		if v ~= nil then
@@ -166,104 +175,104 @@ end
 --#region =================== GAME STATE ===================
 
 -- Create a new match and auto-join the lobby
-function testBR.CreateLobby(pid)
-	if testBR.gameState == GAME_STATE.INMATCH then
-		tes3mp.SendMessage(pid, testBRConfig.strMatchAlreadyRunning .. "\n", false)
+function TestBR.CreateLobby(pid)
+	if TestBR.gameState == GAME_STATE.INMATCH then
+		tes3mp.SendMessage(pid, brConfig.strMatchAlreadyRunning .. "\n", false)
 		return
-	elseif testBR.gameState == GAME_STATE.LOBBY then
-		tes3mp.SendMessage(pid, testBRConfig.strProposalAlreadyRunning .. "\n", false)
+	elseif TestBR.gameState == GAME_STATE.LOBBY then
+		tes3mp.SendMessage(pid, brConfig.strProposalAlreadyRunning .. "\n", false)
 		return
 	end
 
-	testBR.DestroyLobby()
+	TestBR.DestroyLobby()
 
 	-- Generate match id
 	matchId = os.time()
 
-	testBR.DebugLog(2, "Handling new round proposal from PID " .. tostring(pid))
-	testBR.gameState = GAME_STATE.LOBBY
-	tes3mp.SendMessage(pid, testBRConfig.strNewMatchProposal .. "\n", true)
-	local matchProposalTimer = tes3mp.CreateTimerEx("BRLobbyExpired", time.seconds(testBRConfig.matchProposalTime), "i", 1)
+	TestBR.DebugLog(2, "Handling new round proposal from PID " .. tostring(pid))
+	TestBR.gameState = GAME_STATE.LOBBY
+	tes3mp.SendMessage(pid, brConfig.strNewMatchProposal .. "\n", true)
+	local matchProposalTimer = tes3mp.CreateTimerEx("BRLobbyExpired", time.seconds(brConfig.matchProposalTime), "i", 1)
 	tes3mp.StartTimer(matchProposalTimer)
 
 	-- Auto-join match proposer
-	testBR.PlayerJoinLobby(pid)
+	TestBR.PlayerJoinLobby(pid)
 end
 
 -- Proposal timer expired
 function BRLobbyExpired()
-	if testBR.gameState == GAME_STATE.LOBBY then
-		tes3mp.SendMessage(0, color.Red .. "Match proposal timer expired!" .. color.White .. " Use /".. testBRConfig.cmdNewMatch .." to try again.\n", true)
+	if TestBR.gameState == GAME_STATE.LOBBY then
+		tes3mp.SendMessage(0, color.Red .. "Match proposal timer expired!" .. color.White .. " Use /".. brConfig.cmdNewMatch .." to try again.\n", true)
 
-		testBR.DestroyLobby()
+		TestBR.DestroyLobby()
 	end
 end
 
 -- Remove all players form lobby
-function testBR.DestroyLobby()
-	if testBR.gameState ~= GAME_STATE.LOBBY then return end
+function TestBR.DestroyLobby()
+	if TestBR.gameState ~= GAME_STATE.LOBBY then return end
 
-	testBR.DebugLog(2, "Ending current match proposal")
+	TestBR.DebugLog(2, "Ending current match proposal")
 
 	-- Remove players from lobby
 	for pid, player in pairs(Players) do
-		testBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
+		TestBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
 	end
 
-	testBR.gameState = GAME_STATE.NONE
+	TestBR.gameState = GAME_STATE.NONE
 end
 
 -- Begin match
-function testBR.StartRound()
-	if testBR.gameState == GAME_STATE.INMATCH then
-		testBR.DebugLog(3, "Attempted to start a match, but one in already running")
+function TestBR.StartRound()
+	if TestBR.gameState == GAME_STATE.INMATCH then
+		TestBR.DebugLog(3, "Attempted to start a match, but one in already running")
 		return
 	end
 
 	-- Stop timers from previous match
-	testBR.StopFogTimers()
+	TestBR.StopFogTimers()
 
-	testBR.DebugLog(2, "Starting a battle royale round with ID " .. tostring(testBR.roundID))
+	TestBR.DebugLog(2, "Starting a battle royale round with ID " .. tostring(TestBR.roundID))
 
 	playerList = {}
 
 	visitedCells = {}
 
-	testBR.LoadLootTables()
+	TestBR.LoadLootTables()
 
-	fogGridLimits = testBR.GenerateFogGrid(testBRConfig.fogLevelSizes)
+	fogGridLimits = TestBR.GenerateFogGrid(brConfig.fogLevelSizes)
 
 	currentFogStage = 1
 
-	testBR.ResetWorld()
+	TestBR.ResetWorld()
 
 	-- Make sure no one enters the game as a corpse (died in lobby)
 	for pid, player in pairs(Players) do
 		if Players[pid].resurrectTimer ~= nil then
-			testBR.ResurrectPlayer(pid)
+			TestBR.ResurrectPlayer(pid)
 		end
 	end
 
-	testBR.gameState = GAME_STATE.INMATCH
+	TestBR.gameState = GAME_STATE.INMATCH
 
 	for pid, player in pairs(Players) do
-		testBR.PlayerStartRound(pid)
+		TestBR.PlayerStartRound(pid)
 	end
 
-	local message = string.gsub( testBRConfig.strMatchStart, "{x}", tostring(testBR.CountPlayersInState(PLAYER_STATE.INMATCH)) )
+	local message = string.gsub( brConfig.strMatchStart, "{x}", tostring(TestBR.CountPlayersInState(PLAYER_STATE.INMATCH)) )
 	tes3mp.SendMessage(0, message .. "\n", true)
 
-	testBR.StartFogTimer(testBRConfig.fogStageDurations[currentFogStage])
+	TestBR.StartFogTimer(brConfig.fogStageDurations[currentFogStage])
 
 	-- Clean map
 	tes3mp.ClearMapChanges()
-	testBR.CleanMap()
+	TestBR.CleanMap()
 	tes3mp.SendWorldMap(tes3mp.GetLastPlayerId(), true, false)
 end
 
 -- Check if the match should end (0 or 1 player left)
-function testBR.CheckVictoryConditions()
-	if testBR.gameState == GAME_STATE.INMATCH then
+function TestBR.CheckVictoryConditions()
+	if TestBR.gameState == GAME_STATE.INMATCH then
 		local count = 0
 		local playerName = ""
 		local player = 0
@@ -287,33 +296,33 @@ function testBR.CheckVictoryConditions()
 		end
 
 		if count == 0 then
-			tes3mp.SendMessage(0, color.Green .. testBRConfig.strEndNoWinner .. "\n", true)
-			testBR.EndMatch()
+			tes3mp.SendMessage(0, color.Green .. brConfig.strEndNoWinner .. "\n", true)
+			TestBR.EndMatch()
 		elseif count == 1 then
-			tes3mp.SendMessage(0, color.Green .. string.gsub(testBRConfig.strEndWin, "{x}", playerName) .. "\n", true)
+			tes3mp.SendMessage(0, color.Green .. string.gsub(brConfig.strEndWin, "{x}", playerName) .. "\n", true)
 			-- Increment wins count for that player
 			Players[player].data.BRinfo.wins = Players[player].data.BRinfo.wins + 1
 			Players[player]:Save()
-			testBR.EndMatch()
+			TestBR.EndMatch()
 		end
 	end
 end
 
 -- End match
-function testBR.EndMatch()
-	testBR.gameState = GAME_STATE.NONE
-	testBR.StopFogTimers()
+function TestBR.EndMatch()
+	TestBR.gameState = GAME_STATE.NONE
+	TestBR.StopFogTimers()
 	for pid, player in pairs(Players) do
 		-- Remove player from round participants
-		testBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
+		TestBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
 	end
 end
 
 -- Force match end
-function testBR.AdminEndMatch(pid)
+function TestBR.AdminEndMatch(pid)
 	if Players[pid]:IsAdmin() then
-		if testBR.gameState == GAME_STATE.INMATCH then
-			testBR.EndMatch()
+		if TestBR.gameState == GAME_STATE.INMATCH then
+			TestBR.EndMatch()
 			tes3mp.SendMessage(0, color.Green .. "Match ended by an admin\n", true)
 		else
 			tes3mp.SendMessage(pid, "There is no match to end\n", false)
@@ -329,7 +338,7 @@ end
 --#region =================== PLAYER STATE ===================
 
 -- How many players are in a specific BR state
-function testBR.CountPlayersInState(state)
+function TestBR.CountPlayersInState(state)
 	local res = 0
 	for onlinePid, player in pairs(Players) do
 		if player:IsLoggedIn() then
@@ -342,27 +351,27 @@ function testBR.CountPlayersInState(state)
 end
 
 -- Join lobby (set state to JOINED)
-function testBR.PlayerJoinLobby(pid)
+function TestBR.PlayerJoinLobby(pid)
 	if Players[pid] == nil or (not Players[pid]:IsLoggedIn()) then
 		return
 	end
 
-	testBR.DebugLog(2, "Setting state for " .. tostring(pid))
+	TestBR.DebugLog(2, "Setting state for " .. tostring(pid))
 	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() then
-		if testBR.gameState == GAME_STATE.INMATCH then
-			tes3mp.SendMessage(0, testBRConfig.strMatchAlreadyRunning .. "\n", false)
+		if TestBR.gameState == GAME_STATE.INMATCH then
+			tes3mp.SendMessage(0, brConfig.strMatchAlreadyRunning .. "\n", false)
 			return
-		elseif testBR.gameState ~= GAME_STATE.LOBBY then
-			tes3mp.SendMessage(0, testBRConfig.strNoCurrentMatch .. "\n", false)
+		elseif TestBR.gameState ~= GAME_STATE.LOBBY then
+			tes3mp.SendMessage(0, brConfig.strNoCurrentMatch .. "\n", false)
 			return
 		elseif Players[pid].data.BRinfo.state == PLAYER_STATE.SPECT then
 			Players[pid].data.BRinfo.matchId = matchId
 
 			tes3mp.SendMessage(0, Players[pid].data.login.name .. " joined the lobby!\n", true)
-			tes3mp.SendMessage(pid, "Use /" .. testBRConfig.cmdReady .. " when you're ready to start!\n", false)
-			testBR.SetPlayerState(pid, PLAYER_STATE.JOINED)
+			tes3mp.SendMessage(pid, "Use /" .. brConfig.cmdReady .. " when you're ready to start!\n", false)
+			TestBR.SetPlayerState(pid, PLAYER_STATE.JOINED)
 		elseif Players[pid].data.BRinfo.state == PLAYER_STATE.JOINED then
-			tes3mp.SendMessage(pid, "You already joined, use /" .. testBRConfig.cmdReady .. "!\n")
+			tes3mp.SendMessage(pid, "You already joined, use /" .. brConfig.cmdReady .. "!\n")
 		elseif Players[pid].data.BRinfo.state == PLAYER_STATE.READY then
 			tes3mp.SendMessage(pid, "You already joined and marked as ready!\n")
 		end
@@ -370,67 +379,67 @@ function testBR.PlayerJoinLobby(pid)
 end
 
 -- Player Ready (set state to READY)
-function testBR.PlayerSetReady(pid)
+function TestBR.PlayerSetReady(pid)
 	if Players[pid] == nil or (not Players[pid]:IsLoggedIn()) then
 		return
-	elseif testBR.gameState == GAME_STATE.INMATCH then
-		tes3mp.SendMessage(pid, testBRConfig.strMatchAlreadyRunning .. "\n", false)
+	elseif TestBR.gameState == GAME_STATE.INMATCH then
+		tes3mp.SendMessage(pid, brConfig.strMatchAlreadyRunning .. "\n", false)
 		return
 	end
-	if testBR.gameState == GAME_STATE.LOBBY then
+	if TestBR.gameState == GAME_STATE.LOBBY then
 		-- Force player to join
 		if Players[pid].data.BRinfo.state == PLAYER_STATE.SPECT then
-			testBR.PlayerJoinLobby(pid)
+			TestBR.PlayerJoinLobby(pid)
 		end
 		if Players[pid].data.BRinfo.state == PLAYER_STATE.JOINED then
-			testBR.SetPlayerState(pid, PLAYER_STATE.READY)
-			tes3mp.SendMessage(pid, color.Yellow .. string.gsub(testBRConfig.strPlayerReady, "{x}", Players[pid].data.login.name) .. "\n", true)
+			TestBR.SetPlayerState(pid, PLAYER_STATE.READY)
+			tes3mp.SendMessage(pid, color.Yellow .. string.gsub(brConfig.strPlayerReady, "{x}", Players[pid].data.login.name) .. "\n", true)
 
 			-- Start match if everyone is ready
-			if testBR.CountPlayersInState(PLAYER_STATE.JOINED) <= 0 then
-				testBR.StartRound()
+			if TestBR.CountPlayersInState(PLAYER_STATE.JOINED) <= 0 then
+				TestBR.StartRound()
 			end
 
 		elseif Players[pid].data.BRinfo.state == PLAYER_STATE.READY then
 			tes3mp.SendMessage(pid, "You are already ready.\n", false)
 		end
 	else
-		tes3mp.SendMessage(pid, testBRConfig.strNoCurrentMatch .. "\n", false)
+		tes3mp.SendMessage(pid, brConfig.strNoCurrentMatch .. "\n", false)
 	end
 end
 
 -- Start the match for a player
-function testBR.PlayerStartRound(pid)
-	testBR.DebugLog(0, "Starting initial BR setup for PID " .. tostring(pid))
+function TestBR.PlayerStartRound(pid)
+	TestBR.DebugLog(0, "Starting initial BR setup for PID " .. tostring(pid))
 	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() and Players[pid].data.BRinfo.state == PLAYER_STATE.READY then
 		Players[pid].data.BRinfo.team = 0
 
-		testBR.PlayerSpells(pid)
+		TestBR.PlayerSpells(pid)
 
-		testBR.ClearInventory(pid)
+		TestBR.ClearInventory(pid)
 
-		testBR.SetFogDamageLevel(pid, 0)
+		TestBR.SetFogDamageLevel(pid, 0)
 
-		testBR.ResetCharacter(pid)
+		TestBR.ResetCharacter(pid)
 
-		testBR.SpawnPlayer(pid, false)
+		TestBR.SpawnPlayer(pid, false)
 
-		testBR.StartAirdrop(pid)
+		TestBR.StartAirdrop(pid)
 
 		playerList[Players[pid].data.login.name] = true
 
-		tes3mp.MessageBox(pid, -1, testBRConfig.strBeginMatch)
+		tes3mp.MessageBox(pid, -1, brConfig.strBeginMatch)
 
-		testBR.SetPlayerState(pid, PLAYER_STATE.INMATCH)
+		TestBR.SetPlayerState(pid, PLAYER_STATE.INMATCH)
 	end
 end
 
 -- Called from local PlayerStartRound to reset characters for each new match
-function testBR.ResetCharacter(pid)
-	testBR.DebugLog(0, "Resetting stats for " .. Players[pid].data.login.name .. ".")
+function TestBR.ResetCharacter(pid)
+	TestBR.DebugLog(0, "Resetting stats for " .. Players[pid].data.login.name .. ".")
 
 	-- Reset player level
-	Players[pid].data.stats.level = testBRConfig.defaultStats.playerLevel
+	Players[pid].data.stats.level = brConfig.defaultStats.playerLevel
 	Players[pid].data.stats.levelProgress = 0
 
 	-- Reset bounty
@@ -438,29 +447,29 @@ function testBR.ResetCharacter(pid)
 
 	-- Reset player attributes
 	for name in pairs(Players[pid].data.attributes) do
-		Players[pid].data.attributes[name].base = testBRConfig.defaultStats.playerAttributes
+		Players[pid].data.attributes[name].base = brConfig.defaultStats.playerAttributes
 		Players[pid].data.attributes[name].skillIncrease = 0
 	end
 
-	Players[pid].data.attributes.Speed.base = testBRConfig.defaultStats.playerSpeed
-	Players[pid].data.attributes.Luck.base = testBRConfig.defaultStats.playerLuck
+	Players[pid].data.attributes.Speed.base = brConfig.defaultStats.playerSpeed
+	Players[pid].data.attributes.Luck.base = brConfig.defaultStats.playerLuck
 
 	-- Reset player skills
 	for name in pairs(Players[pid].data.skills) do
-		Players[pid].data.skills[name].base = testBRConfig.defaultStats.playerSkills
+		Players[pid].data.skills[name].base = brConfig.defaultStats.playerSkills
 		Players[pid].data.skills[name].progress = 0
 	end
 
-	Players[pid].data.skills.Acrobatics.base = testBRConfig.defaultStats.playerAcrobatics
-	Players[pid].data.skills.Marksman.base = testBRConfig.defaultStats.playerMarksman
+	Players[pid].data.skills.Acrobatics.base = brConfig.defaultStats.playerAcrobatics
+	Players[pid].data.skills.Marksman.base = brConfig.defaultStats.playerMarksman
 
 	-- Reset player stats
-	Players[pid].data.stats.healthBase = testBRConfig.defaultStats.playerHealth
-	Players[pid].data.stats.healthCurrent = testBRConfig.defaultStats.playerHealth
-	Players[pid].data.stats.magickaBase = testBRConfig.defaultStats.playerMagicka
-	Players[pid].data.stats.magickaCurrent = testBRConfig.defaultStats.playerMagicka
-	Players[pid].data.stats.fatigueBase = testBRConfig.defaultStats.playerFatigue
-	Players[pid].data.stats.fatigueCurrent = testBRConfig.defaultStats.playerFatigue
+	Players[pid].data.stats.healthBase = brConfig.defaultStats.playerHealth
+	Players[pid].data.stats.healthCurrent = brConfig.defaultStats.playerHealth
+	Players[pid].data.stats.magickaBase = brConfig.defaultStats.playerMagicka
+	Players[pid].data.stats.magickaCurrent = brConfig.defaultStats.playerMagicka
+	Players[pid].data.stats.fatigueBase = brConfig.defaultStats.playerFatigue
+	Players[pid].data.stats.fatigueCurrent = brConfig.defaultStats.playerFatigue
 
 
 	-- Reload player with reset information
@@ -473,17 +482,17 @@ function testBR.ResetCharacter(pid)
 end
 
 -- Spawns the player in the lobby or drops them from the sky
-function testBR.SpawnPlayer(pid, spawnInLobby)
-	testBR.DebugLog(1, "Spawning player " .. tostring(pid))
+function TestBR.SpawnPlayer(pid, spawnInLobby)
+	TestBR.DebugLog(1, "Spawning player " .. tostring(pid))
 	local chosenSpawnPoint
 	if spawnInLobby then
-		chosenSpawnPoint = {testBRConfig.lobbyCell, testBRConfig.lobbySpawn.posX, testBRConfig.lobbySpawn.posY, testBRConfig.lobbySpawn.posZ, 0}
-		tes3mp.MessageBox(pid, -1, testBRConfig.strWelcomeToLobby)
+		chosenSpawnPoint = {brConfig.lobbyCell, brConfig.lobbySpawn.posX, brConfig.lobbySpawn.posY, brConfig.lobbySpawn.posZ, 0}
+		tes3mp.MessageBox(pid, -1, brConfig.strWelcomeToLobby)
 	else
 		-- TEST: use random spawn point for now
 		local random_x = math.random(-40000,80000)
 		local random_y = math.random(-40000,120000)
-		testBR.DebugLog(0, "Spawning player " .. tostring(pid) .. " at " .. tostring(random_x) .. ", " .. tostring(random_y))
+		TestBR.DebugLog(0, "Spawning player " .. tostring(pid) .. " at " .. tostring(random_x) .. ", " .. tostring(random_y))
 		chosenSpawnPoint = {"0, 0", random_x, random_y, 30000, 0}
 		Players[pid].data.BRinfo.airmode = 2
 	end
@@ -495,67 +504,71 @@ function testBR.SpawnPlayer(pid, spawnInLobby)
 end
 
 -- Either enables or disables spectator mode for player
--- this part assumes that there is a proper entry for br_ghost in recordstore
-function testBR.SetSpectator(pid, boolean)
-	testBR.DebugLog(1, "Setting spectator mode for PID " .. tostring(pid))
+function TestBR.SetSpectator(pid, boolean)
+	TestBR.DebugLog(1, "Setting spectator mode for PID " .. tostring(pid))
 	if boolean then
-		testBR.AddSpell(pid, "br_ghost")
+		TestBR.AddSpell(pid, "br_spectator")
 	else
-		testBR.RemoveSpell(pid, "br_ghost")
+		TestBR.RemoveSpell(pid, "br_spectator")
 	end
 end
 
+function TestBR.GetPlayerState(pid)
+	-- #TODO: Check if logged in
+	return Players[pid].data.BRinfo.state
+end
+
 -- Change player state. This will also refresh the player
-function testBR.SetPlayerState(pid, newState)
+function TestBR.SetPlayerState(pid, newState)
 	Players[pid].data.BRinfo.state = newState
-	testBR.RefreshPlayerState(pid)
+	TestBR.RefreshPlayerState(pid)
 	Players[pid]:Save()
 end
 
 -- Apply RefreshPlayerState on all players
-function testBR.RefreshAllPlayersState()
+function TestBR.RefreshAllPlayersState()
 	for pid, player in pairs(Players) do
-		testBR.RefreshPlayerState(pid)
+		TestBR.RefreshPlayerState(pid)
 	end
 end
 
 -- Apply effects to the corresponding player
 -- #TODO: Spectator effects (disable combat but allow fun interactions)
-function testBR.RefreshPlayerState(pid)
+function TestBR.RefreshPlayerState(pid)
 	if Players[pid].data.BRinfo.state == PLAYER_STATE.SPECT then -- Set player as spectator
-		testBR.SetSpectator(pid, true)
-		testBR.SetAirMode(pid, 0)
+		TestBR.SetSpectator(pid, true)
+		TestBR.SetAirMode(pid, 0)
 
 	elseif Players[pid].data.BRinfo.matchId ~= matchId then -- Player's matchId is different from current matchId, force into spectator
-		testBR.DebugLog(1, "Player's matchID doesn't match")
-		testBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
+		TestBR.DebugLog(1, "Player's matchID doesn't match")
+		TestBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
 
 	elseif Players[pid].data.BRinfo.state == PLAYER_STATE.JOINED then
-		if tes3mp.GetCell(pid) ~= testBRConfig.lobbyCell then -- Move player back to lobby
-			testBR.SpawnPlayer(pid, true)
+		if tes3mp.GetCell(pid) ~= brConfig.lobbyCell then -- Move player back to lobby
+			TestBR.SpawnPlayer(pid, true)
 		end
-		testBR.SetSpectator(pid, false)
-		testBR.SetAirMode(pid, 0)
+		TestBR.SetSpectator(pid, false)
+		TestBR.SetAirMode(pid, 0)
 
 	elseif Players[pid].data.BRinfo.state == PLAYER_STATE.READY then
-		if tes3mp.GetCell(pid) ~= testBRConfig.lobbyCell then -- Move player back to lobby
-			testBR.SpawnPlayer(pid, true)
+		if tes3mp.GetCell(pid) ~= brConfig.lobbyCell then -- Move player back to lobby
+			TestBR.SpawnPlayer(pid, true)
 		end
-		testBR.SetSpectator(pid, false)
-		testBR.SetAirMode(pid, 0)
+		TestBR.SetSpectator(pid, false)
+		TestBR.SetAirMode(pid, 0)
 
 	else -- In match
-		if (testBR.gameState ~= GAME_STATE.INMATCH) or Players[pid].data.BRinfo.matchId ~= matchId then
-			testBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
+		if (TestBR.gameState ~= GAME_STATE.INMATCH) or Players[pid].data.BRinfo.matchId ~= matchId then
+			TestBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
 		else
-			testBR.SetSpectator(pid, false)
+			TestBR.SetSpectator(pid, false)
 		end
 	end
 end
 
 -- Ensures a player has sane BR data
-function testBR.VerifyPlayerData(pid)
-	testBR.DebugLog(1, "Verifying player data for " .. tostring(Players[pid]))
+function TestBR.VerifyPlayerData(pid)
+	TestBR.DebugLog(1, "Verifying player data for " .. tostring(Players[pid]))
 
 	if Players[pid].data.BRinfo == nil then
 		BRinfo = {}
@@ -580,7 +593,7 @@ end
 --#region =================== PLAYER SPELLS ===================
 
 -- Clear player's spellbook #TODO and add feather and restore fatigue powers
-function testBR.PlayerSpells(pid)
+function TestBR.PlayerSpells(pid)
 	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() then
 		Players[pid]:CleanSpellbook()
 		Players[pid].data.selectedSpell = ""
@@ -596,7 +609,7 @@ function testBR.PlayerSpells(pid)
 end
 
 -- Shortcut to add a single spell to a player's spellbook (don't use it for multiple spells)
-function testBR.AddSpell(pid, spell)
+function TestBR.AddSpell(pid, spell)
 	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() then
 		tes3mp.ClearSpellbookChanges(pid)
 		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.ADD)
@@ -606,7 +619,7 @@ function testBR.AddSpell(pid, spell)
 end
 
 -- Shortcut to remove a single spell from a player's spellbook (don't use it for multiple spells)
-function testBR.RemoveSpell(pid, spell)
+function TestBR.RemoveSpell(pid, spell)
 	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() then
 		tes3mp.ClearSpellbookChanges(pid)
 		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.REMOVE)
@@ -621,23 +634,23 @@ end
 --#region =================== PLAYER INVENTORY ===================
 
 -- Empty a player's inventory
-function testBR.ClearInventory(pid)
+function TestBR.ClearInventory(pid)
 	Players[pid]:CleanInventory()
 	Players[pid].data.inventory = {}
 	Players[pid].data.equipment = {}
 
-	testBR.ApplyPlayerItems(pid)
+	TestBR.ApplyPlayerItems(pid)
 end
 
 -- Save changes and make items appear on player
-function testBR.ApplyPlayerItems(pid)
+function TestBR.ApplyPlayerItems(pid)
 	Players[pid]:Save()
 	Players[pid]:LoadInventory()
 	Players[pid]:LoadEquipment()
 end
 
-function testBR.DropAllItems(pid)
-	testBR.DebugLog(1, "Dropping all items for PID " .. tostring(pid))
+function TestBR.DropAllItems(pid)
+	TestBR.DebugLog(1, "Dropping all items for PID " .. tostring(pid))
 
 	local z_offset = 5
 
@@ -645,16 +658,16 @@ function testBR.DropAllItems(pid)
 	local inventoryLength = #Players[pid].data.inventory
 	if inventoryLength > 0 then
 		for index=1,inventoryLength do
-			testBR.DropItem(pid, index, z_offset)
+			TestBR.DropItem(pid, index, z_offset)
 			z_offset = z_offset + 5
 		end
 	end
-	testBR.ClearInventory(pid)
+	TestBR.ClearInventory(pid)
 end
 
 -- inspired by code from from David-AW (https://github.com/David-AW/tes3mp-safezone-dropitems/blob/master/deathdrop.lua#L134)
 -- and from rickoff (https://github.com/rickoff/Tes3mp-Ecarlate-Script/blob/0.7.0/DeathDrop/DeathDrop.lua
-function testBR.DropItem(pid, index, z_offset)
+function TestBR.DropItem(pid, index, z_offset)
 
 	local player = Players[pid]
 
@@ -677,7 +690,7 @@ function testBR.DropItem(pid, index, z_offset)
 	local refIndex =  0 .. "-" .. mpNum
 	local itemref = {refId = item.refId, count = item.count, charge = item.charge }
 	Players[pid]:Save()
-	testBR.DebugLog(0, "Removing item " .. tostring(item.refId))
+	TestBR.DebugLog(0, "Removing item " .. tostring(item.refId))
 	Players[pid]:LoadItemChanges({itemref}, enumerations.inventory.REMOVE)	
 
 	WorldInstance:SetCurrentMpNum(mpNum)
@@ -686,7 +699,7 @@ function testBR.DropItem(pid, index, z_offset)
 	LoadedCells[cell]:InitializeObjectData(refIndex, refId)		
 	LoadedCells[cell].data.objectData[refIndex].location = location			
 	table.insert(LoadedCells[cell].data.packets.place, refIndex)
-	testBR.DebugLog(0, "Sending data to other players")
+	TestBR.DebugLog(0, "Sending data to other players")
 
 	tes3mp.InitializeEvent(pid)
 	tes3mp.SetEventCell(cell)
@@ -708,16 +721,16 @@ end
 
 --#region =================== AIR DROP ===================
 
-function testBR.StartAirdrop(pid)
+function TestBR.StartAirdrop(pid)
 	Players[pid].data.BRinfo.airMode = 2
-	testBR.HandleAirMode(pid)
+	TestBR.HandleAirMode(pid)
 end
 
 -- Apply a player's air-mode to its value and start timers to lower it if needed
-function testBR.HandleAirMode(pid)
+function TestBR.HandleAirMode(pid)
 	if Players[pid] == nil then return end
 	local airmode = Players[pid].data.BRinfo.airMode
-	testBR.SetAirMode(pid, airmode)
+	TestBR.SetAirMode(pid, airmode)
 	Players[pid].data.BRinfo.airMode = airmode - 1
 	if airmode > 1 then
 		--Players[pid].airTimer = tes3mp.CreateTimerEx("OnPlayerTopic", time.seconds((15*airmode)+3), "i", pid)
@@ -727,15 +740,15 @@ function testBR.HandleAirMode(pid)
 end
 
 function BRHandleTimerAirModeTimeout(pid)
-	testBR.HandleAirMode(pid)
+	TestBR.HandleAirMode(pid)
 end
 
 -- set airborne-related effects
 -- 0 = disabled
 -- 1 = just slowfall
 -- 2 = slowfall and speed
-function testBR.SetAirMode(pid, mode)
-	testBR.DebugLog(2, "Setting air mode for " .. tostring(pid))
+function TestBR.SetAirMode(pid, mode)
+	TestBR.DebugLog(2, "Setting air mode for " .. tostring(pid))
 
 	if Players[pid] ~= nil and Players[pid]:IsLoggedIn() then
 		if Players[pid].airTimer ~= nil then -- Stop timer
@@ -745,16 +758,16 @@ function testBR.SetAirMode(pid, mode)
 		Players[pid].data.BRinfo.airMode = mode -- Ensure that the player's data is up to date
 
 		if mode == 2 then
-			testBR.SetSlowFall(pid, true)
+			TestBR.SetSlowFall(pid, true)
 			Players[pid].data.attributes["Speed"].base = 3000
 		elseif mode == 1 then
-			testBR.SetSlowFall(pid, true)
+			TestBR.SetSlowFall(pid, true)
 			-- #TODO: make this restore the proper value
-			Players[pid].data.attributes["Speed"].base = testBRConfig.defaultStats.playerSpeed
+			Players[pid].data.attributes["Speed"].base = brConfig.defaultStats.playerSpeed
 		else 
-			testBR.SetSlowFall(pid, false)
+			TestBR.SetSlowFall(pid, false)
 			-- #TODO: make this restore the proper value
-			Players[pid].data.attributes["Speed"].base = testBRConfig.defaultStats.playerSpeed
+			Players[pid].data.attributes["Speed"].base = brConfig.defaultStats.playerSpeed
 		end
 
 		Players[pid]:Save()
@@ -764,12 +777,12 @@ end
 
 -- either enables or disables slowfall for player
 -- this part assumes that there is a proper entry for br_slowfall_power in recordstore
-function testBR.SetSlowFall(pid, boolean)
-	testBR.DebugLog(1, "Setting slowfall mode for PID " .. tostring(pid))
+function TestBR.SetSlowFall(pid, boolean)
+	TestBR.DebugLog(1, "Setting slowfall mode for PID " .. tostring(pid))
 	if boolean then
-		testBR.AddSpell(pid, "br_slowfall_power")
+		TestBR.AddSpell(pid, "br_slowfall_power")
 	else
-		testBR.RemoveSpell(pid, "br_slowfall_power")
+		TestBR.RemoveSpell(pid, "br_slowfall_power")
 	end
 end
 
@@ -781,8 +794,8 @@ end
 -- Check and applies the damage level for a player at cell transition
 -- #TODO: Apply effects when we are out of the map
 -- #TODO: make it so that damage level doesn't get cleared and re-applied on every cell transition
-function testBR.CheckCellDamageLevel(pid)
-	testBR.DebugLog(1, "Checking new cell for PID " .. tostring(pid))
+function TestBR.CheckCellDamageLevel(pid)
+	TestBR.DebugLog(1, "Checking new cell for PID " .. tostring(pid))
 	local playerCell = Players[pid].data.BRinfo.lastExteriorCell -- Handle interiors	
 
 	-- danke StackOverflow
@@ -791,68 +804,68 @@ function testBR.CheckCellDamageLevel(pid)
 	local foundLevel = false
 
 	for level=1,#fogGridLimits do
-		testBR.DebugLog(0, "GetCurrentDamageLevel: " .. tostring(testBR.GetCurrentDamageLevel(level)))
-		testBR.DebugLog(0, "x == number: " .. tostring(type(tonumber(x)) == "number"))
-		testBR.DebugLog(0, "y == number: " .. tostring(type(tonumber(y)) == "number"))
-		testBR.DebugLog(0, "cell only in level: " .. tostring(testBR.IsCellOnlyInLevel({tonumber(x), tonumber(y)}, level)))
-		if type(testBR.GetCurrentDamageLevel(level)) == "number" and type(tonumber(x)) == "number" 
-		and type(tonumber(y)) == "number" and testBR.IsCellOnlyInLevel({tonumber(x), tonumber(y)}, level) then
-			testBR.SetFogDamageLevel(pid, testBR.GetCurrentDamageLevel(level))
+		TestBR.DebugLog(0, "GetCurrentDamageLevel: " .. tostring(TestBR.GetCurrentDamageLevel(level)))
+		TestBR.DebugLog(0, "x == number: " .. tostring(type(tonumber(x)) == "number"))
+		TestBR.DebugLog(0, "y == number: " .. tostring(type(tonumber(y)) == "number"))
+		TestBR.DebugLog(0, "cell only in level: " .. tostring(TestBR.IsCellOnlyInLevel({tonumber(x), tonumber(y)}, level)))
+		if type(TestBR.GetCurrentDamageLevel(level)) == "number" and type(tonumber(x)) == "number" 
+		and type(tonumber(y)) == "number" and TestBR.IsCellOnlyInLevel({tonumber(x), tonumber(y)}, level) then
+			TestBR.SetFogDamageLevel(pid, TestBR.GetCurrentDamageLevel(level))
 			foundLevel = true
-			testBR.DebugLog(1, "Damage level for PID " .. tostring(pid) .. " is set to " .. tostring(currentFogStage - level))
+			TestBR.DebugLog(1, "Damage level for PID " .. tostring(pid) .. " is set to " .. tostring(currentFogStage - level))
 			break
 		end
 	end
 
 	if not foundLevel then
-		testBR.SetFogDamageLevel(pid, 0)
+		TestBR.SetFogDamageLevel(pid, 0)
 	end
 end
 
-function testBR.SetFogDamageLevel(pid, level)
+function TestBR.SetFogDamageLevel(pid, level)
 	if Players[pid] == nil then
 		return
 	end
-	testBR.DebugLog(1, "Setting damage level for PID " .. tostring(pid))
+	TestBR.DebugLog(1, "Setting damage level for PID " .. tostring(pid))
 
 	tes3mp.ClearSpellbookChanges(pid)
 	if level == 0 then
 		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.REMOVE)
-		tes3mp.AddSpell(pid, "br_fogdamage1")
-		tes3mp.AddSpell(pid, "br_fogdamage2")
-		tes3mp.AddSpell(pid, "br_fogdamage3")
+		tes3mp.AddSpell(pid, "br_fog_1")
+		tes3mp.AddSpell(pid, "br_fog_2")
+		tes3mp.AddSpell(pid, "br_fog_3")
 	elseif level == 1 then
 		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.ADD)
-		tes3mp.AddSpell(pid, "br_fogdamage1")
+		tes3mp.AddSpell(pid, "br_fog_1")
 	elseif level == 2 then
 		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.ADD)
-		tes3mp.AddSpell(pid, "br_fogdamage2")
+		tes3mp.AddSpell(pid, "br_fog_2")
 	elseif level == 3 then
 		tes3mp.SetSpellbookChangesAction(pid, enumerations.spellbook.ADD)
-		tes3mp.AddSpell(pid, "br_fogdamage3")
+		tes3mp.AddSpell(pid, "br_fog_3")
 	end
 	tes3mp.SendSpellbookChanges(pid, true)
 end
 
 -- Start timer for AdvanceFog and alerts
-function testBR.StartFogTimer(delay)
-	testBR.DebugLog(1, "Setting shrink timer for " .. tostring(delay) .. " seconds")
-	tes3mp.SendMessage(0, string.gsub(testBRConfig.strBlightAlertSec, "{x}", tostring(delay) ) .."\n", true)
+function TestBR.StartFogTimer(delay)
+	TestBR.DebugLog(1, "Setting shrink timer for " .. tostring(delay) .. " seconds")
+	tes3mp.SendMessage(0, string.gsub(brConfig.strBlightAlertSec, "{x}", tostring(delay) ) .."\n", true)
 	fogTimer = tes3mp.CreateTimerEx("BRAdvanceFog", time.seconds(delay), "i", 1)
 	tes3mp.StartTimer(fogTimer)
 
 	if delay >= 90 then -- Set alert for last minute
 		fogAlertRemainingTime = 60
-		testBR.StartShrinkAlertTimer(delay - 60)
+		TestBR.StartShrinkAlertTimer(delay - 60)
 	else -- Only set warning for last seconds
 		fogAlertRemainingTime = 10
-		testBR.StartShrinkAlertTimer(delay - 10)
+		TestBR.StartShrinkAlertTimer(delay - 10)
 	end
 end
 
 -- Start timer for alert message boxes
-function testBR.StartShrinkAlertTimer(delay)
-	testBR.DebugLog(1, "Setting shrink timer alert for " .. tostring(delay) .. " seconds")
+function TestBR.StartShrinkAlertTimer(delay)
+	TestBR.DebugLog(1, "Setting shrink timer alert for " .. tostring(delay) .. " seconds")
 	fogAlertTimer = tes3mp.CreateTimerEx("BRHandleShrinkTimerAlertTimeout", time.seconds(delay), "i", 1)
 	tes3mp.StartTimer(fogAlertTimer)
 end
@@ -861,9 +874,9 @@ end
 function BRHandleShrinkTimerAlertTimeout()
 	local message = ""
 	if fogAlertRemainingTime >= 60 then
-		message = testBRConfig.strBlightAlert1Minute
+		message = brConfig.strBlightAlert1Minute
 	else
-		message = string.gsub(testBRConfig.strBlightAlertSec, "{x}", tostring(fogAlertRemainingTime))
+		message = string.gsub(brConfig.strBlightAlertSec, "{x}", tostring(fogAlertRemainingTime))
 	end
 	for pid, player in pairs(Players) do
 		tes3mp.MessageBox(pid, -1, message)
@@ -879,11 +892,11 @@ function BRHandleShrinkTimerAlertTimeout()
 	end
 
 	if fogAlertRemainingTime >= 1 then -- Start next timer
-		testBR.StartShrinkAlertTimer(nextTimer)
+		TestBR.StartShrinkAlertTimer(nextTimer)
 	end
 end
 
-function testBR.StopFogTimers()
+function TestBR.StopFogTimers()
 	if fogTimer ~= nil then
 		tes3mp.StopTimer(fogTimer)
 	end
@@ -893,12 +906,12 @@ function testBR.StopFogTimers()
 end
 
 -- Force fog to advance #TODO: Restrict this to admins
-function testBR.ForceNextFog(pid)
+function TestBR.ForceNextFog(pid)
 	if Players[pid]:IsAdmin() then
 
-		if #testBRConfig.fogStageDurations >= currentFogStage + 1 then
+		if #brConfig.fogStageDurations >= currentFogStage + 1 then
 			-- Stop current timers
-			testBR.StopFogTimers()
+			TestBR.StopFogTimers()
 			BRAdvanceFog()
 		else
 			tes3mp.SendMessage(pid, color.Red .. "Blight cannot shrink anymore\n", false)
@@ -911,26 +924,26 @@ end
 
 -- Advance fog and start timers for next stage and reminders
 function BRAdvanceFog()
-	if (testBR.gameState ~= GAME_STATE.INMATCH) then
+	if (TestBR.gameState ~= GAME_STATE.INMATCH) then
 		return
 	end
 
-	testBR.DebugLog(1, "Advancing fog...")
+	TestBR.DebugLog(1, "Advancing fog...")
 
 	tes3mp.SendMessage(0, "Blight is shrinking.\n", true)
 	currentFogStage = currentFogStage + 1
-	if currentFogStage <= #testBRConfig.fogStageDurations then
-		testBR.StartFogTimer(testBRConfig.fogStageDurations[currentFogStage]) -- Start timer for next stage
+	if currentFogStage <= #brConfig.fogStageDurations then
+		TestBR.StartFogTimer(brConfig.fogStageDurations[currentFogStage]) -- Start timer for next stage
 	end
 
-	testBR.UpdateMap()
+	TestBR.UpdateMap()
 	tes3mp.SendWorldMap(tes3mp.GetLastPlayerId(), true, false)
 
 	for pid, player in pairs(Players) do
 		if player ~= nil and player:IsLoggedIn() then
 			-- Update fog damage for players
 			if Players[pid].data.BRinfo.state == PLAYER_STATE.INMATCH then
-				testBR.CheckCellDamageLevel(pid)
+				TestBR.CheckCellDamageLevel(pid)
 			end
 		end
 	end
@@ -939,12 +952,12 @@ end
 
 -- returns a list of squares that are to be used for fog levels
 -- for example: { {{10, 0}, {0, 10}}, {{5, 5}, {5, 5}}, {} }
-function testBR.GenerateFogGrid(fogLevelSizes)
-	testBR.DebugLog(1, "Generating fog grid")
+function TestBR.GenerateFogGrid(fogLevelSizes)
+	TestBR.DebugLog(1, "Generating fog grid")
 	local generatedFogGrid = {}
 
 	for level=1,#fogLevelSizes do
-		testBR.DebugLog(0, "Generating level " .. tostring(level))
+		TestBR.DebugLog(0, "Generating level " .. tostring(level))
 		generatedFogGrid[level] = {}
 
 		-- handle the first item in the array (double check just to be sure)
@@ -952,19 +965,19 @@ function testBR.GenerateFogGrid(fogLevelSizes)
 		-- or lol, we can just check if this is first time going through the loop
 		-- this does assume that config is not messed up, that first entry is meant to be whole area
 		if level == 1 then
-			table.insert(generatedFogGrid[level], {testBRConfig.mapBorders[1][1], testBRConfig.mapBorders[1][2]})
-			table.insert(generatedFogGrid[level], {testBRConfig.mapBorders[2][1], testBRConfig.mapBorders[2][2]})
+			table.insert(generatedFogGrid[level], {brConfig.mapBorders[1][1], brConfig.mapBorders[1][2]})
+			table.insert(generatedFogGrid[level], {brConfig.mapBorders[2][1], brConfig.mapBorders[2][2]})
 		else
 			-- check out some stuff about previous level
 			local xIncludesZero = 0
 			local yIncludesZero = 0
 			-- check if min X and max X are both positive or both negative
 			-- because if they are not, it means that one of cells in X range is also {0, y}, which must be counted in the length as well
-			if testBR.DoNumbersHaveSameSign(generatedFogGrid[level-1][1][1], generatedFogGrid[level-1][2][1]) then
+			if TestBR.DoNumbersHaveSameSign(generatedFogGrid[level-1][1][1], generatedFogGrid[level-1][2][1]) then
 				xIncludesZero = 1
 			end
 			-- same for Y
-			if testBR.DoNumbersHaveSameSign(generatedFogGrid[level-1][1][2], generatedFogGrid[level-1][2][2]) then
+			if TestBR.DoNumbersHaveSameSign(generatedFogGrid[level-1][1][2], generatedFogGrid[level-1][2][2]) then
 				yIncludesZero = 1
 			end
 
@@ -978,7 +991,7 @@ function testBR.GenerateFogGrid(fogLevelSizes)
 				-- now we can even try to add "border" that is one cell wide, so that edges of previous level and new level don't touch
 				local cellBorder = 0
 				if fogLevelSizes[level] < previousXLength - 2 and fogLevelSizes[level] < previousYLength - 2 then
-					testBR.DebugLog(1, "Level " .. tostring(level) .. " can get a cell-wide border")
+					TestBR.DebugLog(1, "Level " .. tostring(level) .. " can get a cell-wide border")
 					cellBorder = 1
 				end
 
@@ -1002,11 +1015,11 @@ function testBR.GenerateFogGrid(fogLevelSizes)
 			table.insert(generatedFogGrid[level], {newX, newY})
 			-- save top right corner
 			table.insert(generatedFogGrid[level], {newX + fogLevelSizes[level], newY + fogLevelSizes[level]})
-			testBR.DebugLog(0, "" .. tostring(level) .. " goes from " .. tostring(newX) .. ", " .. tostring(newY) .. " to " ..
+			TestBR.DebugLog(0, "" .. tostring(level) .. " goes from " .. tostring(newX) .. ", " .. tostring(newY) .. " to " ..
 				tostring(newX + fogLevelSizes[level]) .. ", " .. tostring(newY + fogLevelSizes[level]))
 			-- lol no place to add the level. Who made this config?
 			else
-				testBR.DebugLog(2, "Given level size does not fit into previous level, skipping this one")
+				TestBR.DebugLog(2, "Given level size does not fit into previous level, skipping this one")
 				-- #TODO: lol this will actually break, since this for loop does not account for missing data
 				-- so just don't make bad configs until this gets implemented :^^^^)
 			end
@@ -1017,10 +1030,10 @@ function testBR.GenerateFogGrid(fogLevelSizes)
 end
 
 -- returns true if cell is part of level
-function testBR.IsCellInLevel(cell, level)
-	testBR.DebugLog(0, "Checking if " .. tostring(cell[1]) .. ", " .. tostring(cell[2]) .. " is in level " .. tostring(level))
+function TestBR.IsCellInLevel(cell, level)
+	TestBR.DebugLog(0, "Checking if " .. tostring(cell[1]) .. ", " .. tostring(cell[2]) .. " is in level " .. tostring(level))
 	-- check if cell is in level range
-	if fogGridLimits[level] and testBR.IsCellInRange(cell, fogGridLimits[level][1], fogGridLimits[level][2]) then
+	if fogGridLimits[level] and TestBR.IsCellInRange(cell, fogGridLimits[level][1], fogGridLimits[level][2]) then
 		return true
 	end
 	return false
@@ -1029,12 +1042,12 @@ end
 -- basically same function as above, only with added exclusivity check
 -- returns true if cell is part of level
 -- #TODO: make this by implementing an "isExclusive" argument instead of having two seperate functions
-function testBR.IsCellOnlyInLevel(cell, level)
-	testBR.DebugLog(0, "Checking if " .. tostring(cell[1]) .. ", " .. tostring(cell[2]) .. " is only in level " .. tostring(level))
+function TestBR.IsCellOnlyInLevel(cell, level)
+	TestBR.DebugLog(0, "Checking if " .. tostring(cell[1]) .. ", " .. tostring(cell[2]) .. " is only in level " .. tostring(level))
 	-- check if cell is in level range
-	if fogGridLimits[level] and testBR.IsCellInRange(cell, fogGridLimits[level][1], fogGridLimits[level][2]) then
+	if fogGridLimits[level] and TestBR.IsCellInRange(cell, fogGridLimits[level][1], fogGridLimits[level][2]) then
 		-- now watch this: check if further levels exist and that cell does not actually belong to that further level
-		if fogGridLimits[level+1] and testBR.IsCellInRange(cell, fogGridLimits[level+1][1], fogGridLimits[level+1][2]) then
+		if fogGridLimits[level+1] and TestBR.IsCellInRange(cell, fogGridLimits[level+1][1], fogGridLimits[level+1][2]) then
 			return false
 		end
 		return true
@@ -1043,11 +1056,11 @@ function testBR.IsCellOnlyInLevel(cell, level)
 end
 
 -- returns true if cell is inside the rectangle defined by given coordinates
-function testBR.IsCellInRange(cell, topRight, bottomLeft)
+function TestBR.IsCellInRange(cell, topRight, bottomLeft)
 	if cell == nil then
 		return
 	end
-	testBR.DebugLog(0, "Checking if " .. tostring(cell[1]) .. ", " .. tostring(cell[2]) .. " is inside the "
+	TestBR.DebugLog(0, "Checking if " .. tostring(cell[1]) .. ", " .. tostring(cell[2]) .. " is inside the "
 		 .. tostring(topRight[1]) .. ", " .. tostring(topRight[2]) .. " - " .. tostring(bottomLeft[1]) .. ", " .. tostring(bottomLeft[2]) .. " rectangle")
 	if cell[1] >= topRight[1] and cell[1] <= bottomLeft[1] and cell[2] >= topRight[2] and cell[2] <= bottomLeft[2] then
 		return true
@@ -1055,31 +1068,31 @@ function testBR.IsCellInRange(cell, topRight, bottomLeft)
 	return false
 end
 
-function testBR.DoNumbersHaveSameSign(number1, number2)
+function TestBR.DoNumbersHaveSameSign(number1, number2)
 	if string.sub(tostring(number1), 1, 1) == string.sub(tostring(number2), 1, 1) then
 		return true
 	end
 	return false
 end
 
-function testBR.GetCurrentDamageLevel(level)
-	testBR.DebugLog(1, "Looking up damage level for level " .. tostring(level))
-	if currentFogStage - level > #testBRConfig.fogDamageValues then
-		return testBRConfig.fogDamageValues[#testBRConfig.fogDamageValues]
+function TestBR.GetCurrentDamageLevel(level)
+	TestBR.DebugLog(1, "Looking up damage level for level " .. tostring(level))
+	if currentFogStage - level > #brConfig.fogDamageValues then
+		return brConfig.fogDamageValues[#brConfig.fogDamageValues]
 	else
-		return testBRConfig.fogDamageValues[currentFogStage - level]
+		return brConfig.fogDamageValues[currentFogStage - level]
 	end
 end
 
-function testBR.UpdateMap()
-	testBR.DebugLog(1, "Updating map to fog level " .. tostring(currentFogStage))
+function TestBR.UpdateMap()
+	TestBR.DebugLog(1, "Updating map to fog level " .. tostring(currentFogStage))
 	tes3mp.ClearMapChanges()
 
 	for levelIndex=1,#fogGridLimits do
 		-- at this point I am just banging code together until it works
 		-- got lucky with the first condition, added second condition in order to limit logic only to relevant levels
-		if levelIndex - currentFogStage < #testBRConfig.fogDamageValues and testBRConfig.fogDamageValues[currentFogStage - levelIndex] ~= nil then
-			testBR.DebugLog(1, "Level " .. tostring(levelIndex) .. " gets fog level " .. tostring(testBRConfig.fogDamageValues[currentFogStage - levelIndex]))
+		if levelIndex - currentFogStage < #brConfig.fogDamageValues and brConfig.fogDamageValues[currentFogStage - levelIndex] ~= nil then
+			TestBR.DebugLog(1, "Level " .. tostring(levelIndex) .. " gets fog level " .. tostring(brConfig.fogDamageValues[currentFogStage - levelIndex]))
 
 			-- iterate through all cells in this level
 			for x=fogGridLimits[levelIndex][1][1],fogGridLimits[levelIndex][2][1] do
@@ -1088,9 +1101,9 @@ function testBR.UpdateMap()
 					-- instead, we just check if cells are not in the next level. Same thing that above mentioned function would do,
 					-- but we do it on smaller set of cells
 					-- so it's "is this the last level OR (is there next level AND cell is not part of next level)"		
-					if not fogGridLimits[levelIndex+1] or (fogGridLimits[levelIndex+1] and not testBR.IsCellInLevel({x, y}, levelIndex+1)) then
+					if not fogGridLimits[levelIndex+1] or (fogGridLimits[levelIndex+1] and not TestBR.IsCellInLevel({x, y}, levelIndex+1)) then
 						--tes3mp.LoadMapTileImageFile(x, y, fogFilePaths[currentFogStage - levelIndex])
-						testBR.PaintMapTile(x, y, currentFogStage - levelIndex)
+						TestBR.PaintMapTile(x, y, currentFogStage - levelIndex)
 					end
 				end
 			end
@@ -1099,28 +1112,28 @@ function testBR.UpdateMap()
 end
 
 -- Paint a map tile to a fog level. You will need to call tes3mp.SendWorldMap() to send the changes to players.
-function testBR.PaintMapTile(x, y, level)
+function TestBR.PaintMapTile(x, y, level)
 	local path = ""
 	if level >= #fogFilePaths then
 		path = fogFilePaths[ #fogFilePaths ]
 	elseif level > 0 then
 		path = fogFilePaths[ level ]
 	else
-		path = testBRConfig.fogNoneFilePath
+		path = brConfig.fogNoneFilePath
 	end
 	tes3mp.LoadMapTileImageFile(x, y, path)
 end
 
-function testBR.CleanMap()
+function TestBR.CleanMap()
 	for x=fogGridLimits[1][1][1], fogGridLimits[1][2][1] do
 		for y=fogGridLimits[1][1][2], fogGridLimits[1][2][2] do
-			testBR.PaintMapTile(x, y, 0)
+			TestBR.PaintMapTile(x, y, 0)
 		end
 	end
 end
 
-function testBR.SendMapToPlayer(pid)
-	testBR.DebugLog(1, "Sending map to PID " .. tostring(pid))
+function TestBR.SendMapToPlayer(pid)
+	TestBR.DebugLog(1, "Sending map to PID " .. tostring(pid))
 	tes3mp.SendWorldMap(pid, false, false)
 end
 
@@ -1128,17 +1141,17 @@ end
 
 
 -- #TODO: Implement this
-function testBR.ResetWorld()
+function TestBR.ResetWorld()
 
 end
 
 
 function BROnDeathTimeExpiration(pid)
-	testBR.ResurrectPlayer(pid)
+	TestBR.ResurrectPlayer(pid)
 end
 
 -- Modified respawning behavior for Battle Royale that doesn't teleport the player
-function testBR.ResurrectPlayer(pid)
+function TestBR.ResurrectPlayer(pid)
 	if Players[pid] == nil then return end
 
 	if Players[pid].resurrectTimer ~= nil then
@@ -1157,9 +1170,9 @@ function testBR.ResurrectPlayer(pid)
 
 	tes3mp.Resurrect(pid, enumerations.resurrect.REGULAR)
 
-	if testBR.gameState ~= GAME_STATE.LOBBY then
-		testBR.SetPlayerState(PLAYER_STATE.SPECT)
-		tes3mp.MessageBox(pid, -1, testBRConfig.strGhost)
+	if TestBR.gameState ~= GAME_STATE.LOBBY then
+		TestBR.SetPlayerState(PLAYER_STATE.SPECT)
+		tes3mp.MessageBox(pid, -1, brConfig.strGhost)
 	end
 end
 
@@ -1181,13 +1194,18 @@ customEventHooks.registerHandler("OnPlayerTopic", function(eventStatus, pid)
 end)
 ]]-- #TODO: Test new implementation
 
+customEventHooks.registerHandler("OnServerPostInit", function(eventStatus)
+	-- Create necessary permanent records
+	brRecords.Init()
+end)
+
 customEventHooks.registerHandler("OnPlayerFinishLogin", function(eventStatus, pid)
 	if eventStatus.validCustomHandlers then --check if some other script made this event obsolete
-		testBR.VerifyPlayerData(pid)
-		testBR.RefreshPlayerState(pid)
+		TestBR.VerifyPlayerData(pid)
+		TestBR.RefreshPlayerState(pid)
 
-		if testBR.gameState == GAME_STATE.INMATCH then
-			testBR.SendMapToPlayer(pid)
+		if TestBR.gameState == GAME_STATE.INMATCH then
+			TestBR.SendMapToPlayer(pid)
 		end
 	end
 end)
@@ -1206,17 +1224,17 @@ customEventHooks.registerHandler("OnPlayerDeath", function(eventStatus, pid)
 		-- Remove dead player from match, broadcast death notification and check for victory
 		local respawnDelay = 2
 
-		if testBR.gameState == GAME_STATE.INMATCH and Players[pid].data.BRinfo.state == PLAYER_STATE.INMATCH then -- Player was in match
+		if TestBR.gameState == GAME_STATE.INMATCH and Players[pid].data.BRinfo.state == PLAYER_STATE.INMATCH then -- Player was in match
 			respawnDelay = config.deathTime
 
 			-- Send kill message
-			local deathReason = testBRConfig.strDied
+			local deathReason = brConfig.strDied
 
 			if tes3mp.DoesPlayerHavePlayerKiller(pid) then
 				local killerPid = tes3mp.GetPlayerKillerPid(pid)
 
 				if pid ~= killerPid then
-					deathReason = string.gsub(testBRConfig.strKill, "{y}", Players[killerPid].data.login.name)
+					deathReason = string.gsub(brConfig.strKill, "{y}", Players[killerPid].data.login.name)
 					if Players[killerPid] ~= nil then -- Increment killer's kill count
 						Players[killerPid].data.BRinfo.totalKills = Players[killerPid].data.BRinfo.totalKills + 1
 					end
@@ -1225,7 +1243,7 @@ customEventHooks.registerHandler("OnPlayerDeath", function(eventStatus, pid)
 				local killerName = tes3mp.GetPlayerKillerName(pid)
 
 				if killerName ~= "" then				
-					deathReason = string.gsub(testBRConfig.strKill, "{y}", killerName)
+					deathReason = string.gsub(brConfig.strKill, "{y}", killerName)
 				end
 			end
 
@@ -1238,22 +1256,22 @@ customEventHooks.registerHandler("OnPlayerDeath", function(eventStatus, pid)
 
 
 			-- Broadcast death message box to everyone
-			local messageBoxStr = string.gsub( testBRConfig.strXDiedYPlayersRemaining, "{x}", Players[pid].data.login.name )
-			messageBoxStr = string.gsub( messageBoxStr, "{y}", tostring(testBR.TableLen(playerList)-1) )
+			local messageBoxStr = string.gsub( brConfig.strXDiedYPlayersRemaining, "{x}", Players[pid].data.login.name )
+			messageBoxStr = string.gsub( messageBoxStr, "{y}", tostring(TestBR.TableLen(playerList)-1) )
 
 			for i, player in pairs(Players) do
 				tes3mp.MessageBox(i, -1, messageBoxStr)
 			end
 
-			testBR.DropAllItems(pid)
+			TestBR.DropAllItems(pid)
 
-			testBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
+			TestBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
 
 			playerList[Players[pid].data.login.name] = nil
 
-			testBR.CheckVictoryConditions()
+			TestBR.CheckVictoryConditions()
 		end
-		testBR.SetFogDamageLevel(pid, 0)
+		TestBR.SetFogDamageLevel(pid, 0)
 		Players[pid]:Save()
 
 		Players[pid].resurrectTimer = tes3mp.CreateTimerEx("BROnDeathTimeExpiration", time.seconds(respawnDelay), "i", pid)
@@ -1275,7 +1293,7 @@ customEventHooks.registerHandler("OnPlayerResurrect", function(eventStatus, pid)
 		else
 			-- #TODO: Spectator effects (disable combat but allow fun interactions)
 			testBR.SetPlayerState(playerState.SPECT)
-			tes3mp.MessageBox(pid, -1, testBRConfig.strGhost)
+			tes3mp.MessageBox(pid, -1, brConfig.strGhost)
 		end
 
 		testBR.CheckVictoryConditions() -- Just in case
@@ -1297,7 +1315,7 @@ end)
 customEventHooks.registerHandler("OnPlayerEndCharGen", function(eventstatus, pid)
 	if Players[pid] ~= nil then
 
-		testBR.DebugLog(1, "Ending character generation for " .. tostring(pid))
+		TestBR.DebugLog(1, "Ending character generation for " .. tostring(pid))
 		Players[pid]:SaveLogin()
 		Players[pid]:SaveCharacter()
 		Players[pid]:SaveClass()
@@ -1305,31 +1323,31 @@ customEventHooks.registerHandler("OnPlayerEndCharGen", function(eventstatus, pid
 		Players[pid]:SaveEquipment()
 		Players[pid]:SaveIpAddress()
 		Players[pid]:CreateAccount()
-		testBR.VerifyPlayerData(pid)
+		TestBR.VerifyPlayerData(pid)
 
-		testBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
+		TestBR.SetPlayerState(pid, PLAYER_STATE.SPECT)
 	end
 end)
 
 -- custom validator for cell change #TODO: Deny door interaction
 customEventHooks.registerValidator("OnPlayerCellChange", function(eventStatus, pid)
 	-- Prevent players in lobby from leaving it
-	if testBR.gameState == GAME_STATE.LOBBY and tes3mp.GetCell(pid) ~= testBRConfig.lobbyCell and Players[pid].data.BRinfo.state >= 1 then
-		tes3mp.MessageBox(pid, -1, testBRConfig.strCantLeaveLobby)
-		testBR.SpawnPlayer(pid, true)
+	if TestBR.gameState == GAME_STATE.LOBBY and tes3mp.GetCell(pid) ~= brConfig.lobbyCell and Players[pid].data.BRinfo.state >= 1 then
+		tes3mp.MessageBox(pid, -1, brConfig.strCantLeaveLobby)
+		TestBR.SpawnPlayer(pid, true)
         return customEventHooks.makeEventStatus(false, true)
 	end
 
 	--[[-- Allow player to spawn in lobby
-	if tes3mp.GetCell(pid) == testBRConfig.lobbyCell and (testBR.gameState ~= GAME_STATE.INMATCH) then
+	if tes3mp.GetCell(pid) == brConfig.lobbyCell and (testBR.gameState ~= GAME_STATE.INMATCH) then
 		return customEventHooks.makeEventStatus(true,true)
 	end--]]
 
-	if (not testBRConfig.allowInteriors) and testBR.gameState == GAME_STATE.INMATCH and Players[pid].data.BRinfo.state == PLAYER_STATE.INMATCH then
+	if (not brConfig.allowInteriors) and TestBR.gameState == GAME_STATE.INMATCH and Players[pid].data.BRinfo.state == PLAYER_STATE.INMATCH then
 		local _, _, cellX, cellY = string.find(tes3mp.GetCell(pid), patterns.exteriorCell)
 		if cellX == nil or cellY == nil then
-			testBR.DebugLog(1, tostring(pid).." tried to enter an interior")
-			tes3mp.MessageBox(pid, -1, testBRConfig.strCantEnterInterior)
+			TestBR.DebugLog(1, tostring(pid).." tried to enter an interior")
+			tes3mp.MessageBox(pid, -1, brConfig.strCantEnterInterior)
 			Players[pid].data.location.posX = tes3mp.GetPreviousCellPosX(pid)
 			Players[pid].data.location.posY = tes3mp.GetPreviousCellPosY(pid)
 			Players[pid].data.location.posZ = tes3mp.GetPreviousCellPosZ(pid)
@@ -1344,7 +1362,7 @@ end)
 customEventHooks.registerHandler("OnPlayerCellChange", function(eventStatus, pid)
 	if eventStatus.validCustomHandlers then --check if some other script made this event obsolete
 		
-		testBR.DebugLog(0, "Processing cell change for PID " .. tostring(pid))
+		TestBR.DebugLog(0, "Processing cell change for PID " .. tostring(pid))
 		if Players[pid] ~= nil and Players[pid]:IsLoggedIn() and Players[pid].data.BRinfo.state == PLAYER_STATE.INMATCH then
 
 			-- Spawn random loot if this cell is visited for the first time
@@ -1364,7 +1382,7 @@ customEventHooks.registerHandler("OnPlayerCellChange", function(eventStatus, pid
 				--tes3mp.SendWorldMap(pid, false, false)
 			end
 
-			testBR.CheckCellDamageLevel(pid)
+			TestBR.CheckCellDamageLevel(pid)
 
 			Players[pid]:SaveStatsDynamic()
 			Players[pid]:Save()
@@ -1378,21 +1396,19 @@ end)
 
 --#region ======================== LOOT TABLES ========================
 
-local lootManager = require("custom/testBRLootManager")
-
 -- Init loot table
-testBR.DebugLog(1, "Initializing loot table manager")
-testBRLootManager.init(testBRConfig.lootTable)
+TestBR.DebugLog(1, "Initializing loot table manager")
+testBRLootManager.init(brConfig.lootTable)
 
 -- Reload loot tables from disk
-function testBR.LoadLootTables()
-	testBR.DebugLog(1, "Loading loot table from disk")
+function TestBR.LoadLootTables()
+	TestBR.DebugLog(1, "Loading loot table from disk")
 	testBRLootManager.LoadFromDisk()
 end
 
 -- Add a loot spawn location for a given loot table at the player's position
-function testBR.AddLootSpawn(pid, lootTable)
-	if testBR.gameState == GAME_STATE.INMATCH then
+function TestBR.AddLootSpawn(pid, lootTable)
+	if TestBR.gameState == GAME_STATE.INMATCH then
 		tes3mp.SendMessage(pid, color.Red .. "Cannot edit loot spawn points during a match!\n", false)
 	else
 		if lootTable == nil then
@@ -1405,25 +1421,25 @@ function testBR.AddLootSpawn(pid, lootTable)
 	end
 end
 
-function testBR.AddLootSpawnCmd(pid, args) -- #TODO: Restrict this to a certain permission level & check if the table exists
+function TestBR.AddLootSpawnCmd(pid, args) -- #TODO: Restrict this to a certain permission level & check if the table exists
 	if lootTable == nil then
 		tes3mp.SendMessage(pid, color.Red .. "Missing loot table argument\n", false)
 	else
-		testBR.AddLootSpawn(pid, args[2])
+		TestBR.AddLootSpawn(pid, args[2])
 	end
 end
 
 -- Temporary utility command to add common loot
-function testBR.AddLootSpawnCommon(pid)
-	testBR.AddLootSpawn(pid, "common")
+function TestBR.AddLootSpawnCommon(pid)
+	TestBR.AddLootSpawn(pid, "common")
 end
 -- Temporary utility command to add rare loot
-function testBR.AddLootSpawnRare(pid)
-	testBR.AddLootSpawn(pid, "rare")
+function TestBR.AddLootSpawnRare(pid)
+	TestBR.AddLootSpawn(pid, "rare")
 end
 -- Temporary utility command to add legendary loot
-function testBR.AddLootSpawnLegendary(pid)
-	testBR.AddLootSpawn(pid, "legendary")
+function TestBR.AddLootSpawnLegendary(pid)
+	TestBR.AddLootSpawn(pid, "legendary")
 end
 
 --#endregion
@@ -1431,26 +1447,27 @@ end
 
 --#region ======================== REGISTER COMMANDS ========================
 
-customCommandHooks.registerCommand(testBRConfig.cmdNewMatch, testBR.CreateLobby)
-customCommandHooks.registerCommand("forcestartmatch", testBR.StartRound)
-customCommandHooks.registerCommand(testBRConfig.cmdJoin, testBR.PlayerJoinLobby)
-customCommandHooks.registerCommand(testBRConfig.cmdReady, testBR.PlayerSetReady)
-customCommandHooks.registerCommand("forcenextfog", testBR.ForceNextFog)
-customCommandHooks.registerCommand("forceend", testBR.AdminEndMatch)
+customCommandHooks.registerCommand(brConfig.cmdMenu, brGUI.ShowUserMenu)
+customCommandHooks.registerCommand(brConfig.cmdNewMatch, TestBR.CreateLobby)
+customCommandHooks.registerCommand("forcestartmatch", TestBR.StartRound)
+customCommandHooks.registerCommand(brConfig.cmdJoin, TestBR.PlayerJoinLobby)
+customCommandHooks.registerCommand(brConfig.cmdReady, TestBR.PlayerSetReady)
+customCommandHooks.registerCommand("forcenextfog", TestBR.ForceNextFog)
+customCommandHooks.registerCommand("forceend", TestBR.AdminEndMatch)
 
 
 -- Temporary utility command
-function testBR.PrintPlayerCoordsCmd(pid)
+function TestBR.PrintPlayerCoordsCmd(pid)
 	tes3mp.SendMessage(pid, Players[pid].data.login.name .. " is at " .. tostring(tes3mp.GetPosX(pid)) .. ", "
 	.. tostring(tes3mp.GetPosY(pid)) .. ", " .. tostring(tes3mp.GetPosZ(pid)) .. " in cell \"" .. tes3mp.GetCell(pid) .. "\"\n")
 end
 
-customCommandHooks.registerCommand("here", testBR.PrintPlayerCoordsCmd)
-customCommandHooks.registerCommand("loot", testBR.AddLootSpawnCmd)
-customCommandHooks.registerCommand("xc", testBR.AddLootSpawnCommon)
-customCommandHooks.registerCommand("xr", testBR.AddLootSpawnRare)
-customCommandHooks.registerCommand("xl", testBR.AddLootSpawnLegendary)
+customCommandHooks.registerCommand("here", TestBR.PrintPlayerCoordsCmd)
+customCommandHooks.registerCommand("loot", TestBR.AddLootSpawnCmd)
+customCommandHooks.registerCommand("xc", TestBR.AddLootSpawnCommon)
+customCommandHooks.registerCommand("xr", TestBR.AddLootSpawnRare)
+customCommandHooks.registerCommand("xl", TestBR.AddLootSpawnLegendary)
 
 --#endregion
 
-return testBR
+return TestBR
