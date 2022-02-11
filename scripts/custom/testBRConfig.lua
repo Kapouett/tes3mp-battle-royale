@@ -62,7 +62,7 @@ testBRConfig.fogDamageValues = {"warn", 1, 2, 3}
 -- {{min_X, min_Y},{max_X, max_Y}}
 testBRConfig.mapBorders = {{-15,-15}, {25,25}}
 
--- How many seconds does match proposal last
+-- How many seconds does match proposal last before being cancelled
 testBRConfig.matchProposalTime = 120
 
 -- Lobby cell
@@ -112,7 +112,7 @@ testBRConfig.strBlightAlert1Minute = "Blight shrinking in a minute!"
 testBRConfig.strBlightAlertSec = "Blight shrinking in {x} seconds"
 
 -- Message box displayed when a player respawns as a spectator
-testBRConfig.strGhost = "You're now a spooky ghost!"
+testBRConfig.strGhost = "You're now a spectator!"
 
 -- Chat message displayed when {x} kills themselves
 testBRConfig.strDied = "{x} died."

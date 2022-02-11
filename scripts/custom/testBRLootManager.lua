@@ -1,16 +1,16 @@
 -- Config file
-brConfig = require("custom/testBRConfig")
+local brConfig = require("custom/testBRConfig")
 
-fileHelper = require("fileHelper")
-tableHelper = require("tableHelper")
+local fileHelper = require("fileHelper")
+local tableHelper = require("tableHelper")
 
 -- used for RNG seed
-time = require("time")
+local time = require("time")
+
+testBRLootManager = {}
 
 -- used for generation of random numbers
 math.randomseed(os.time())
-
-testBRLootManager = {}
 
 local defaultData = { tables = {  }, locations = {  } }
 
@@ -24,11 +24,11 @@ local lootFile = ""
 
 local hasEntry = false
 
-testBRLootManager.init = function(fileName)
+function testBRLootManager.init(fileName)
 	lootFile = fileName .. ".json"
 
 	-- Initialize current data to valid default values
-	data = tableHelper.shallowCopy(defaultData)
+	testBRLootManager.data = tableHelper.shallowCopy(defaultData)
 
 	-- Create file if non-existant
 	local f = io.open(tes3mp.GetDataPath() .. "/custom/" .. lootFile, "a")
@@ -40,20 +40,20 @@ testBRLootManager.init = function(fileName)
 	end
 end
 
-testBRLootManager.CreateEntry = function()
+function testBRLootManager.CreateEntry()
     jsonInterface.save("custom/" .. lootFile, data)
     hasEntry = true
 end
 
 -- Save current data to the file
-testBRLootManager.SaveToDrive = function()
+function testBRLootManager.SaveToDrive()
     if hasEntry then
         jsonInterface.save("custom/" .. lootFile, data)
     end
 end
 
 -- Set current data to content of the file
-testBRLootManager.LoadFromDisk = function()
+function testBRLootManager.LoadFromDisk()
 	if (not hasEntry) then
 		testBRLootManager.CreateEntry()
 	end
@@ -72,7 +72,7 @@ testBRLootManager.LoadFromDisk = function()
 end
 
 -- Add a new loot spawn location
-testBRLootManager.AddLocation = function(table, cell, x, y, z)
+function testBRLootManager.AddLocation(table, cell, x, y, z)
 	if data == nil then
 		tes3mp.LogMessage(3, "Invalid loot table")
 		data = tableHelper.shallowCopy(defaultData)
@@ -81,7 +81,7 @@ testBRLootManager.AddLocation = function(table, cell, x, y, z)
 		tes3mp.LogMessage(3, "Invalid loot locations table")
 		data.locations = tableHelper.shallowCopy(defaultData.locations)
 	end
-	
+
 	if data.locations[cell] == nil then
 		data.locations[cell] = {}
 	end	
@@ -92,7 +92,7 @@ testBRLootManager.AddLocation = function(table, cell, x, y, z)
 end
 
 -- Spawn loot for a cell
-testBRLootManager.SpawnCellLoot = function(cell)
+function testBRLootManager.SpawnCellLoot(cell)
 	if data == nil then
 		tes3mp.LogMessage(3, "Invalid loot table")
 		return
@@ -101,7 +101,7 @@ testBRLootManager.SpawnCellLoot = function(cell)
 		tes3mp.LogMessage(3, "Invalid loot locations table")
 		return
 	end
-	
+
 	local spawnPoints = data.locations[cell]
 	if spawnPoints == nil then return end -- Nothing to spawn
 
@@ -117,7 +117,7 @@ testBRLootManager.SpawnCellLoot = function(cell)
 end
 
 -- Get a random item for a spawnPoint, returns refId and count
-testBRLootManager.GetRandomItem = function(spawnPoint)
+function testBRLootManager.GetRandomItem(spawnPoint)
 	if sums[spawnPoint.table] == nil then
 		tes3mp.LogMessage(3, "Tried to get a random item from an inexistant loot table (returned nil instead)")
 		return nil
@@ -135,21 +135,21 @@ testBRLootManager.GetRandomItem = function(spawnPoint)
 	return nil
 end
 
-testBRLootManager.SpawnItem = function(cell, x, y, z, refId, count)
+function testBRLootManager.SpawnItem(cell, x, y, z, refId, count)
 	local mpNum = WorldInstance:GetCurrentMpNum() + 1
 	local location = {
 		posX = x, posY = y, posZ = z,
 		rotX = 0, rotY = 0, rotZ = 0
 	}
 	local refIndex =  0 .. "-" .. mpNum
-	
+
 	WorldInstance:SetCurrentMpNum(mpNum)
 	tes3mp.SetCurrentMpNum(mpNum)
 
 	LoadedCells[cell]:InitializeObjectData(refIndex, refId)		
 	LoadedCells[cell].data.objectData[refIndex].location = location			
 	table.insert(LoadedCells[cell].data.packets.place, refIndex)
-	
+
 	tes3mp.LogMessage(1, "Spawning " .. tostring(refId) .. " *" .. tostring(count) .. " in " .. cell)
 	tes3mp.LogMessage(1, "Sending spawned item to players")
 	for onlinePid, player in pairs(Players) do
@@ -171,7 +171,7 @@ testBRLootManager.SpawnItem = function(cell, x, y, z, refId, count)
 end
 
 -- Spawn a corpse containing loot
-testBRLootManager.SpawnLootBox = function(cell, x, y, z, loot)
+function testBRLootManager.SpawnLootBox(cell, x, y, z, loot)
 	local data = {}
 
 	local refId = "br_lootbox"
@@ -192,22 +192,22 @@ testBRLootManager.SpawnLootBox = function(cell, x, y, z, loot)
 	local objectData = {}
 	objectData.refId = refId
 	objectData.location = location
-	
+
 	packetBuilder.AddObjectPlace(uniqueId, objectData)
-	
+
 	tes3mp.SendObjectPlace(true, false)
-	
+
 	-- Add loot
 	for itemRefId, itemData in pairs(loot) do
-		if item ~= nil then
-			command = "additem \"" .. itemRefId .. "\" " .. tostring(itemData.count) --TODO: test this
+		if itemData ~= nil then
+			local command = "additem \"" .. itemRefId .. "\" " .. tostring(itemData.count) --TODO: test this
 			logicHandler.RunConsoleCommandOnObject(0, command, LoadedCells[cell], uniqueId, true)
 		end
 	end
 end
 
-testBRLootManager.UpdateSums = function()
-	sums = {}
+function testBRLootManager.UpdateSums()
+	testBRLootManager.sums = {}
 	for table, items in pairs(data.tables) do
 		local sum = 0
 
@@ -215,7 +215,12 @@ testBRLootManager.UpdateSums = function()
 			sum = sum + itemData.proba
 		end
 
-		sums[table] = sum
+		testBRLootManager.sums[table] = sum
 	end
 end
 
+function testBRLootManager.HasTable(table) --#TODO: Test this
+	return testBRLootManager.data[table] ~= nil
+end
+
+return testBRLootManager
