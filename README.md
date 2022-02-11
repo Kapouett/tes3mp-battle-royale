@@ -2,7 +2,7 @@
 
 [![Generic badge](https://img.shields.io/badge/code%20style-spaghetti-orange.svg)](https://img.devrant.com/devrant/rant/r_172856_HvF2J.jpg)
 
-Battle Royale game mode for TES3MP 0.7.0-alpha.
+Battle Royale game mode for [TES3MP](https://github.com/TES3MP/TES3MP) 0.8.0.
 
 - `scripts/custom/testBR.lua` is the file with most of the code.
 - `scripts/custom/testBRLootManager.lua` manages loot tables and loot spawning logic.
